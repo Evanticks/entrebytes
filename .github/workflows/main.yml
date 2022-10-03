@@ -11,7 +11,7 @@ env:
   node_version: lts/*
 
 concurrency: # prevent concurrent deploys doing starnge things
-  group: Mi-blog
+  group: generado
   cancel-in-progress: true
 
 jobs:
@@ -26,5 +26,5 @@ jobs:
       with:
         api_token: ${{ secrets.NEOCITIES_API_TOKEN }}
         cleanup: false
-        dist_dir:
+        dist_dir: .
 
