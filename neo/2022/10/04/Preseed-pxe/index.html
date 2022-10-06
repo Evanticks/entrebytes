@@ -15,10 +15,9 @@ En vagrant creamos una máquina que tenga una ip estática 192.168.100.3 que va 
 <p>a continuación instalamos el wget y lo usamos en &#x2F;srv&#x2F;tftp</p>
 <p><code>wget http://ftp.debian.org/debian/dists/buster/main/installer-amd64/current/images/netboot/netboot.tar.gz </code></p>
 <p><code>tar -zxf netboot.tar.gz</code> (para descomprimir los archivos)<br><code>rm netboot.tar.gz</code></p>
-<pre><code>srv/tftp/debian-installer/amd64/boot-screens/txt.cfg
-
-En este fichero de configuración utilizamos los siguientes parámetros:
-label install
+<p><code>srv/tftp/debian-installer/amd64/boot-screens/txt.cfg</code></p>
+<p>En este fichero de configuración utilizamos los siguientes parámetros:</p>
+<pre><code>label install
         menu label ^Install
         kernel debian-installer/amd64/linux
         append vga=788 initrd=debian-installer/amd64/initrd.gz --- quiet
