@@ -4,6 +4,19 @@
   
     
     <entry>
+      <title></title>
+      <link href="/2022/10/06/Oracle/"/>
+      <url>/2022/10/06/Oracle/</url>
+      
+        <content type="html"><![CDATA[<p><strong>init.ora</strong> – uso de memoria, paths…<br><strong>tnsnames.ora</strong> – config cliente,todas las bd a las que se conecta.<br><strong>listener.ora</strong> – configura proceso de esccucha.</p><p>Lo demás importante está en el diccionario de datos</p><p>Base de datos:<br>usuario y contraseña el cual el usuario entrará y tendrá unos permisos para ver unas tablas</p><p>Grupal:<br>usar cliente y configurarlo a través de TNS</p>]]></content>
+      
+      
+      
+    </entry>
+    
+    
+    
+    <entry>
       <title>Instalación preseed PXE+APACHE</title>
       <link href="/2022/10/04/Preseed-pxe/"/>
       <url>/2022/10/04/Preseed-pxe/</url>

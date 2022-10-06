@@ -6,7 +6,7 @@
   <link href="http://example.com/atom.xml" rel="self"/>
   
   <link href="http://example.com/"/>
-  <updated>2022-10-06T10:14:36.839Z</updated>
+  <updated>2022-10-06T10:50:28.959Z</updated>
   <id>http://example.com/</id>
   
   <author>
@@ -15,6 +15,26 @@
   </author>
   
   <generator uri="https://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title></title>
+    <link href="http://example.com/2022/10/06/Oracle/"/>
+    <id>http://example.com/2022/10/06/Oracle/</id>
+    <published>2022-10-06T10:50:28.959Z</published>
+    <updated>2022-10-06T10:50:28.959Z</updated>
+    
+    <content type="html"><![CDATA[<p><strong>init.ora</strong> – uso de memoria, paths…<br><strong>tnsnames.ora</strong> – config cliente,todas las bd a las que se conecta.<br><strong>listener.ora</strong> – configura proceso de esccucha.</p><p>Lo demás importante está en el diccionario de datos</p><p>Base de datos:<br>usuario y contraseña el cual el usuario entrará y tendrá unos permisos para ver unas tablas</p><p>Grupal:<br>usar cliente y configurarlo a través de TNS</p>]]></content>
+    
+    
+      
+      
+    <summary type="html">&lt;p&gt;&lt;strong&gt;init.ora&lt;/strong&gt; – uso de memoria, paths…&lt;br&gt;&lt;strong&gt;tnsnames.ora&lt;/strong&gt; – config cliente,todas las bd a las que se conecta.&lt;b</summary>
+      
+    
+    
+    
+    
+  </entry>
   
   <entry>
     <title>Instalación preseed PXE+APACHE</title>
