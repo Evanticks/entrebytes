@@ -6,7 +6,7 @@
   <link href="http://example.com/atom.xml" rel="self"/>
   
   <link href="http://example.com/"/>
-  <updated>2022-10-10T10:19:16.626Z</updated>
+  <updated>2022-10-13T18:29:05.064Z</updated>
   <id>http://example.com/</id>
   
   <author>
@@ -17,38 +17,19 @@
   <generator uri="https://hexo.io/">Hexo</generator>
   
   <entry>
-    <title></title>
-    <link href="http://example.com/2022/10/10/LXC/"/>
-    <id>http://example.com/2022/10/10/LXC/</id>
-    <published>2022-10-10T10:02:10.614Z</published>
-    <updated>2022-10-10T10:19:16.626Z</updated>
+    <title>Ansible + Vagrant, configurar y enrutar servidor web.</title>
+    <link href="http://example.com/2022/10/13/Ansible+Vagrant/"/>
+    <id>http://example.com/2022/10/13/Ansible+Vagrant/</id>
+    <published>2022-10-13T17:45:40.684Z</published>
+    <updated>2022-10-13T18:29:05.064Z</updated>
     
-    <content type="html"><![CDATA[<p>Hay que trabajar como root<br>lxc-create -n contenedor1 -t debian – -r bullseye<br>Empezará a descargar el sistema de archivos de debian</p><p>para borrarlo:<br>lxc-destroy contenedor1</p><p>‘LXC trabaja con guiones, si encuentras lxc destroy significa que es parte de LXD’<br>lxc-ls</p><p>lxc-start contenedor1</p><p>lxc-attach contendor1 (solo funciona desde el host)<br>(podemos conectarnos a través de ssh)</p><p>Si queremos configurar todos los contenedores para que sean diferentes a la configuración inicial:<br>cd &#x2F;etc&#x2F;lxc&#x2F;default.conf</p>]]></content>
-    
-    
-      
-      
-    <summary type="html">&lt;p&gt;Hay que trabajar como root&lt;br&gt;lxc-create -n contenedor1 -t debian – -r bullseye&lt;br&gt;Empezará a descargar el sistema de archivos de debian&lt;</summary>
-      
-    
-    
-    
-    
-  </entry>
-  
-  <entry>
-    <title></title>
-    <link href="http://example.com/2022/10/06/Oracle/"/>
-    <id>http://example.com/2022/10/06/Oracle/</id>
-    <published>2022-10-06T10:50:28.959Z</published>
-    <updated>2022-10-06T10:50:28.959Z</updated>
-    
-    <content type="html"><![CDATA[<p><strong>init.ora</strong> – uso de memoria, paths…<br><strong>tnsnames.ora</strong> – config cliente,todas las bd a las que se conecta.<br><strong>listener.ora</strong> – configura proceso de esccucha.</p><p>Lo demás importante está en el diccionario de datos</p><p>Base de datos:<br>usuario y contraseña el cual el usuario entrará y tendrá unos permisos para ver unas tablas</p><p>Grupal:<br>usar cliente y configurarlo a través de TNS</p>]]></content>
+    <content type="html"><![CDATA[<p><img src="/images/ansibleandvagrant.jpg" alt="Descripción de la imagen"></p><p>Comenzaremos este post viendo como adjuntamos una box <a href="https://app.vagrantup.com/boxes/search">https://app.vagrantup.com/boxes/search</a><br>buscamos por ejemplo la de debian&#x2F;ullseye, vamos a nuestra terminal y escribimos lo siguiente:<br><code>vagrant box add debian/bullseye64</code></p><p>En ese momento se guardará en <code>~/.vagrant.d/boxes</code><br>Bueno, dicho esto procedemos a crear la carpeta donde vamos a trabajar y hacemos un <code>vagrant init</code>, esto hará que se cree un archivo llamado vagrantfile, el cual debe quedar de la siguiente manera:</p><pre><code>Vagrant.configure(&quot;2&quot;) do |config|    config.vm.define :nodo1 do |nodo1|      nodo1.vm.box = &quot;debian/bullseye64&quot;      nodo1.vm.hostname= &quot;nodo1&quot;      nodo1.vm.synced_folder &quot;.&quot;, &quot;/vagrant&quot;, disabled: true      nodo1.vm.network :public_network,        :dev =&gt; &quot;br0&quot;,        :mode =&gt; &quot;bridge&quot;,        :type =&gt; &quot;bridge&quot;,        use_dhcp_assigned_default_route: true      nodo1.vm.network :private_network,        :libvirt__network_name =&gt; &quot;red1&quot;,        :libvirt__dhcp_enabled =&gt; false,        :ip =&gt; &quot;10.0.0.10&quot;,        :libvirt__forward_mode =&gt; &quot;veryisolated&quot;    end    config.vm.define :nodo2 do |nodo2|      nodo2.vm.box = &quot;debian/bullseye64&quot;      nodo2.vm.hostname = &quot;nodo2&quot;      nodo2.vm.synced_folder &quot;.&quot;, &quot;/vagrant&quot;, disabled: true      nodo2.vm.network :private_network,        :libvirt__network_name =&gt; &quot;red1&quot;,        :libvirt__dhcp_enabled =&gt; false,        :ip =&gt; &quot;10.0.0.11&quot;,        :libvirt__forward_mode =&gt; &quot;veryisolated&quot;,        use_dhcp_assigned_default_route: true    endend</code></pre><p>Vamos a explicar paso por paso qué vemos en el código:</p><ul><li>El vagrantfile debe estar perfectamente alineado, los end con sus respectivos config.</li><li>Al ser dos máquinas las vamos a llamar nodo1 y nodo2, que una será el router y la segunda el servidor que aloje apache</li><li>Si nos fijamos con atención podemos ver que <strong>nodo1</strong> tiene dos redes, una será pública, la cual tiene un bridge por donde saldrá a internet, y una red privada muy aislada, la cual no contendrá nada más que una ip estática, pondremos que la ruta por defecto va a ser el bridge que nos llevará a internet.</li><li>En <strong>nodo2</strong> tendremos una red privada, más tarde procederemos a ejecutar unas reglas que nos permitan salir por el exterior a través de la red muy aislada con <strong>nat</strong></li></ul><p>Una vez hecho esto procedemos a ver de cerca lo que contiene Ansible, el cual ejecutaremos tras iniciar las máquinas de Vagrant junto con sus redes.</p><p><img src="/images/Ansible.png" alt="Descripción de la imagen"></p><p>Como podemos ver, hay una serie de carpetas llamadas roles, cada rol va a ejecutar una o varias tareas dependiendo de lo que se trate, por lo tanto así quedaría por ejemplo el activado del bit de forwarding del router:</p><pre><code>- ansible.posix.sysctl:    name: net.ipv4.ip_forward    value: &#39;1&#39;    sysctl_set: yes</code></pre><p>Estas tareas tienen un orden, y se realiza dentro de site.yml:</p><pre><code>- hosts: nodo1  become: true  roles:   - role: copy- hosts: all  become: true  roles:   - role: commons- hosts: nodo2  become: true  roles:   - role: copy2   - role: apache2- hosts: nodo1  become: true  roles:   - role: ipv4</code></pre><p>Con un poco de conocimientos en sistemas podemos ver claramente qué realiza cada rol.</p><p>Ahora vamos a poner la lupa en <code>roles/commons/handlers/main.yaml</code>, una parte muy importante de la ejecución de Ansible:</p><pre><code>- name: reiniciando maquina  ansible.builtin.reboot:    msg: &quot;reboot by Ansible&quot;    pre_reboot_delay: 5    post_reboot_delay: 10    test_command: &quot;whoami&quot;</code></pre><p>Este handler se ejecuta en el momento en el que se hace un llamamiento, en nuestro caso es cuando copiamos al router un fichero configurado para etc&#x2F;network&#x2F;interfaces, con sus interfaces, ruta por defecto e iptables:</p><p><img src="/images/interfaces.png" alt="Descripción de la imagen"></p><p>podemos ver como en <code>roles/copy/tasks/main.yaml</code> hace el llamamiento al <strong>handler</strong> en el notify:</p><pre><code>- name: Copiando al etc/network/interfaces  ansible.builtin.copy:    src: interfaz_nodo1/interfaces    dest: /etc/network/    owner: root    group: root    mode: u-rw,g-wx,o-rwx  notify:    - reiniciando maquina</code></pre><p>A continuación podemos copiar nuestra clave pública a través de la tarea <strong>commons</strong> que será lo que nos permita atravesar por ssh sin utilizar la clave vagrant, es decir, la nuestra.</p><pre><code>- name: Ensure system is updated  apt: update_cache=yes upgrade=yes- name: Set authorized key took from file  authorized_key:    user: vagrant    state: present    key: &quot;&#123;&#123; lookup('file', '/home/antonio/.ssh/id_rsa.pub') &#125;&#125;&quot;</code></pre><p>Luego pasamos a la instalación de Apache,a través del módulo apt para instalar apache2, ports.conf es la configuración de los puertos por los que escucha, también alberga el fichero index.html y una plantilla jinja2.</p><p>Por último pero no menos importante está el fichero hosts, el cual será el inventario por el cual el sistema sabrá cuál será nodo1 y cuál nodo2, a través de las correspondientes ips que asignaremos,el usuario más la clave privada que asignará vagrant:</p><pre><code>all:  children:    servidores_web:      hosts:        nodo1:          ansible_ssh_host: 192.168.121.212          ansible_ssh_user: vagrant          ansible_ssh_private_key_file: ../.vagrant/machines/nodo1/libvirt/private_key        nodo2:          ansible_ssh_host: 192.168.121.111          ansible_ssh_user: vagrant          ansible_ssh_private_key_file: ../.vagrant/machines/nodo2/libvirt/private_key</code></pre><p>con esto solo necesitaremos ejecutar el <code>ansible-playbook site.yaml</code> y tendremos enrutado y configurado nuestro servidor web.</p>]]></content>
     
     
       
       
-    <summary type="html">&lt;p&gt;&lt;strong&gt;init.ora&lt;/strong&gt; – uso de memoria, paths…&lt;br&gt;&lt;strong&gt;tnsnames.ora&lt;/strong&gt; – config cliente,todas las bd a las que se conecta.&lt;b</summary>
+    <summary type="html">&lt;p&gt;&lt;img src=&quot;/images/ansibleandvagrant.jpg&quot; alt=&quot;Descripción de la imagen&quot;&gt;&lt;/p&gt;
+&lt;p&gt;Comenzaremos este post viendo como adjuntamos una box &lt;a </summary>
       
     
     
