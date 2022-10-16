@@ -82,14 +82,15 @@
     <link href="http://example.com/2022/09/30/Compilar-en-debian/"/>
     <id>http://example.com/2022/09/30/Compilar-en-debian/</id>
     <published>2022-09-30T06:41:07.316Z</published>
-    <updated>2022-10-10T10:19:27.918Z</updated>
+    <updated>2022-10-16T23:45:21.909Z</updated>
     
-    <content type="html"><![CDATA[<h2 id="apt-source-lvm2"><a href="#apt-source-lvm2" class="headerlink" title="apt source lvm2"></a>apt source lvm2</h2><p>nos metemos en la carpeta lvm2 y leemos el archivo.dsc<br>luego buscamos el archivo makefile y si no lo tenemos pues hacemos <strong>.&#x2F;configure</strong> , necesitaremos las dependencias así que procuraremos hacer un <code>apt build-dep lvm2</code>,<br>con esto instalará las dependencias, y una vez hecho esto compilamos de dos maneras:</p><ul><li>haciendo un make, una vez compilado realizamos un <code>make install</code></li></ul><p>.&#x2F;configure –prefix &#x2F;usr&#x2F;local&#x2F;xorriso&#x2F;</p><ul><li>Otra forma de compilar el código fuente es de esta manera: <code>dpkg-buildpackage -b</code></li></ul><p>para diseccionar un paquete .deb utilizamos <code>ar -x loquesea.deb</code></p>]]></content>
+    <content type="html"><![CDATA[<p><img src="/images/debian-11.jpg" alt="Descripción de la imagen"></p><p>Necesitamos descargar el código fuente de xorriso:<br><code>apt source xorriso</code><br>Nos pide que instalemos dpkg-dev debido a que necesita el paquete dpkg-source<br><code>apt install dpkg-dev</code><br>Con esto al descargar el código fuente de un paquete este se descomprimirá, también podemos hacerlo a través de tar:</p><p><code>tar -xvf libisoburn_1.5.2.orig.tar.gz</code></p><p><img src="/images/xorriso-1.png" alt="Descripción de la imagen"></p><p>nos metemos en la carpeta de xorriso y leemos el archivo.dsc</p><p>Como podemos ver en la imagen dentro del paquete libisoburn está las diferentes dependencias para el binario que queremos compilar.</p><p><img src="/images/xorriso-2.png" alt="Descripción de la imagen"></p><p>Como podemos observar hay dos makefile, pero estos no son más que unas plantillas que no lograremos compilar ya que solo sirven de guía.</p><p>necesitaremos las dependencias así que procuraremos hacer un <code>apt build-dep xorriso</code>.</p><p>Una vez instaladas las dependencias ejecutamos <code>./configure --prefix /usr/local/xorriso/</code>, con esto se habrá generado el makefile, y el binario generado se guardará en &#x2F;usr&#x2F;local&#x2F;xorriso</p><p><img src="/images/xorriso-3.png" alt="Descripción de la imagen"></p><p>Ahora una vez tengamos el archivo del makefile, ejecutamos un <code>make</code> en el directorio del makefile, una vez compilado realizamos un <code>make install</code></p><p><img src="/images/xorriso-4.png" alt="Descripción de la imagen"></p><p>Como podemos ver existe el binario que ejecutaremos y viene incluído el archivo de ayuda.</p>]]></content>
     
     
       
       
-    <summary type="html">&lt;h2 id=&quot;apt-source-lvm2&quot;&gt;&lt;a href=&quot;#apt-source-lvm2&quot; class=&quot;headerlink&quot; title=&quot;apt source lvm2&quot;&gt;&lt;/a&gt;apt source lvm2&lt;/h2&gt;&lt;p&gt;nos metemos en la </summary>
+    <summary type="html">&lt;p&gt;&lt;img src=&quot;/images/debian-11.jpg&quot; alt=&quot;Descripción de la imagen&quot;&gt;&lt;/p&gt;
+&lt;p&gt;Necesitamos descargar el código fuente de xorriso:&lt;br&gt;&lt;code&gt;apt s</summary>
       
     
     
