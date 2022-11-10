@@ -1,0 +1,88 @@
+<!DOCTYPE html><html class="appearance-auto" lang="en"><head><meta charset="UTF-8"><title>Antonio Marchán's blog</title><meta name="description" content="Aprendiz de Informática"><meta name="viewport" content="width=device-width, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no, initial-scale=1"><!-- Google Analytics --><!-- End Google Analytics -->
+<!-- Baidu Analytics --><!-- End Baidu Analytics --><link rel="icon" href="/images/favicon.png"><link rel="stylesheet" href="/style/common/bulma.css"><link rel="stylesheet" href="/style/base.css"><link rel="stylesheet" href="/style/common/helper.css"><script src="/js/common.js"></script><link rel="stylesheet" href="/style/post.css"><link rel="stylesheet" href="/style/themes/highlight-theme-light.css"><script src="/js/highlight.pack.js"></script><meta name="description" content="#Interconexiones entre Bases de Datos
+
+##Interconexión entre dos bases de datos Oracle.
+Antes que nada debemos saber que para conectarnos a una base de datos, debemos tener activados los listener y seguidamente tener en el tsnames.ora la base de datos a la que queremos conectarnos, de esta manera:sudo nano &amp;#x2F;opt&amp;#x2F;oracle&amp;#x2F;product&amp;#x2F;19c&amp;#x2F;d.."><meta name="generator" content="Hexo 6.3.0"><link rel="alternate" href="/atom.xml" title="Hexo" type="application/atom+xml">
+</head><body class="is-flex is-flex-direction-column"><header class="header-widget is-flex-shrink-0 is-hidden-mobile"><div class="container is-fullhd is-flex is-justify-content-space-between is-align-items-center is-full-height"><section class="is-hidden-mobile is-flex-shrink-0"><h2><a href="/">El blog de Antonio Marchán</a></h2></section><h3 class="is-hidden-mobile is-family-serif is-full-height is-flex is-align-items-center is-flex-shrink-0"><div class="is-full-height" id="postTopic"><p class="is-full-height is-flex-shrink-0 is-flex is-align-items-center is-justify-content-center"></p><p class="is-full-height is-flex-shrink-0 is-flex is-align-items-center is-justify-content-center">Volver arriba</p></div></h3><aside class="is-flex-shrink-0"><h3 class="is-inline-block"><a href="/">Inicio</a></h3><h3 class="is-inline-block"><a href="/about">Sobre mí</a></h3><h3 class="is-inline-block"><a href="/archives">Archivos</a></h3></aside></div></header><header class="is-flex header-widget is-flex-shrink-0 is-align-items-center is-justify-content-center is-hidden-tablet"><h3 class="is-inline-block"><a href="/">Inicio</a></h3><h3 class="is-inline-block"><a href="/about">Sobre mí</a></h3><h3 class="is-inline-block"><a href="/archives">Archivos</a></h3></header><main><main class="container is-max-widescreen content section post-page pt-4 px-4"><div class="columns is-flex-desktop is-justify-content-center is-flex-direction-row-reverse"><div class="column is-3 is-hidden-mobile is-hidden"></div><div class="column is-9"><header class="my-4"></header><h1 class="mt-0 mb-1 is-family-serif" id="postTitle"></h1><time class="has-text-grey" datetime="2022-11-09T19:27:01.893Z">2022-11-09</time><article class="mt-2 post-content"><p>#Interconexiones entre Bases de Datos</p>
+<p><img src="/images/oracle-19c-logo.png" alt="remoto"></p>
+<p>##Interconexión entre dos bases de datos Oracle.</p>
+<p>Antes que nada debemos saber que para conectarnos a una base de datos, debemos tener activados los listener y seguidamente tener en el tsnames.ora la base de datos a la que queremos conectarnos, de esta manera:<br>sudo nano &#x2F;opt&#x2F;oracle&#x2F;product&#x2F;19c&#x2F;dbhome_1&#x2F;network&#x2F;admin&#x2F;tnsnames.ora</p>
+<pre><code>ORCLCDB =
+  (DESCRIPTION =
+    (ADDRESS = (PROTOCOL = TCP)(HOST = 192.168.122.20)(PORT = 1521))
+    (CONNECT_DATA =
+      (SERVER = DEDICATED)
+      (SERVICE_NAME = ORCLCDB)
+    )
+  )
+
+LISTENER_ORCLCDB =
+  (ADDRESS = (PROTOCOL = TCP)(HOST = 192.168.122.20)(PORT = 1521))
+
+ORACLESERV =
+  (DESCRIPTION =
+    (ADDRESS = (PROTOCOL = TCP)(HOST = 192.168.122.168)(PORT = 1521))
+    (CONNECT_DATA =
+      (SERVER = DEDICATED)
+      (SERVICE_NAME = ORCLCDB)
+    )
+  )
+</code></pre>
+<p>Hemos creado una nueva conexión llamada ORACLESERV en el cual procederemos a ingresar la ip del servidor del que queremos recibir los datos, tras esto debemos crear en la otra máquina la tabla de ejemplo que queremos extraer:</p>
+<pre><code>CREATE TABLE armas (
+codarma varchar2 (3),
+nombre varchar2 (20),
+fuerza number (2),
+destreza number (2),
+inteligencia number (2),
+rareza varchar2 (10),
+nivel number (2),
+CONSTRAINT pk_armas PRIMARY KEY (codarma)
+);
+
+insert into armas values (&#39;001&#39;,&#39;Espada Corta&#39;,8,10,0,&#39;D&#39;,5);
+insert into armas values (&#39;002&#39;,&#39;Espada Larga&#39;,10,10,0,&#39;C&#39;,8);
+insert into armas values (&#39;003&#39;,&#39;Espada Artorias&#39;,24,18,20,&#39;S&#39;,30);
+insert into armas values (&#39;004&#39;,&#39;Hacha de Mano&#39;,8,8,0,&#39;D&#39;,6);
+insert into armas values (&#39;005&#39;,&#39;Hacha de Gárgola&#39;,14,14,0,&#39;A&#39;,15);
+insert into armas values (&#39;006&#39;,&#39;Hacha de Demonio&#39;,46,0,0,&#39;S&#39;,40);
+</code></pre>
+<p>Una vez hecho esto, <strong>nos vamos a la máquina en la que vamos a trabajar con la consulta</strong>, debemos crear un enlace a la base de datos, el cual hemos predefinido como ORACLESERV:</p>
+<p><code>create database link ORACLESERVIDOR connect to antonio identified by antonio using &#39;ORACLESERV&#39;;</code></p>
+<p>Tras esto, viene una parte un poco compleja, ya que la tabla que vamos a consultar en el otro servidor viene relacionada, y a la hora de crear relaciones entre tablas no se puede especificar una base de datos remota en el DDL, entonces, cómo podemos hacer que esto funcione? bueno pues mi idea ha sido crear una vista materializada:</p>
+<p><code>create materialized view mv_armas as select codarma from armas@ORACLESERVIDOR;</code></p>
+<p>Una vez hecho esto, procedemos a crear las tablas personaje y equipar, siendo una relación N,M.</p>
+<pre><code>CREATE TABLE personaje (
+codpersonaje varchar2 (3),
+nombre varchar2 (15),
+altura number (3,2),
+peso number (3),
+raza varchar2 (10),
+CONSTRAINT pk_codpersonaje PRIMARY KEY (codpersonaje),
+CONSTRAINT ck_codpersonaje CHECK (REGEXP_LIKE(codpersonaje,&#39;^1.*$&#39;))
+);
+
+insert into personaje values (&#39;101&#39;,&#39;Solaire&#39;,1.70,80,&#39;humano&#39;);
+insert into personaje values (&#39;102&#39;,&#39;Artorias&#39;,1.90,90,&#39;hueco&#39;);
+insert into personaje values (&#39;103&#39;,&#39;Gargola&#39;,3.10,680,&#39;Gárgola&#39;);
+
+CREATE TABLE equipar (
+codpersonaje varchar2 (3),
+codarma varchar2 (3),
+fecha date,
+CONSTRAINT pk_equipar PRIMARY KEY (codpersonaje,codarma,fecha),
+CONSTRAINT fk_codpersonaje FOREIGN KEY (codpersonaje) REFERENCES personaje (codpersonaje),
+CONSTRAINT fk_codarma FOREIGN KEY (codarma) REFERENCES mv_armas(codarma);
+);
+
+insert into equipar values (&#39;102&#39;,&#39;003&#39;,to_date(&#39;2011/02/11&#39;,&#39;YYYY/MM/DD&#39;));
+insert into equipar values (&#39;103&#39;,&#39;005&#39;,to_date(&#39;2011/05/04&#39;,&#39;YYYY/MM/DD&#39;));
+insert into equipar values (&#39;101&#39;,&#39;002&#39;,to_date(&#39;2011/06/03&#39;,&#39;YYYY/MM/DD&#39;));
+insert into equipar values (&#39;103&#39;,&#39;002&#39;,to_date(&#39;2011/09/02&#39;,&#39;YYYY/MM/DD&#39;));
+insert into equipar values (&#39;101&#39;,&#39;006&#39;,to_date(&#39;2011/08/03&#39;,&#39;YYYY/MM/DD&#39;));
+insert into equipar values (&#39;102&#39;,&#39;004&#39;,to_date(&#39;2011/07/01&#39;,&#39;YYYY/MM/DD&#39;));
+</code></pre>
+<p>¡¡Mucho ojo!! la restricción que he establecido en equipar, que es la foreign key que relaciona el código de armas con nuestra base de datos, llamará a la view que hemos creado y contendrá los datos de la consulta al servidor externo.</p>
+<p><img src="/images/sql-remoto.png" alt="remoto"></p>
+<p><img src="/images/sql-remoto2.png" alt="remoto"></p>
+</article><section class="jump-container is-flex is-justify-content-space-between my-6"><!-- em is empty placeholder--><em></em><a class="button is-default" href="/2022/10/13/Ansible+Vagrant/" title="Ansible + Vagrant, configurar y enrutar servidor web."><span class="has-text-weight-semibold">Siguiente: Ansible + Vagrant, configurar y enrutar servidor web.</span><i class="iconfont icon-next ml-2 has-text-grey"></i></a></section><article class="mt-6 comment-container"><script async repo="Haojen/Claudia-theme-blog" src="https://utteranc.es/client.js" issue-term="pathname" theme="preferred-color-scheme"></script></article></div></div></main></main><footer class="is-flex is-flex-direction-column is-align-items-center is-flex-shrink-0 is-family-serif"><section class="sns-container"><!-- Github--><a title="github" target="_blank" rel="noopener nofollow" href="//github.com/evanticks"><i class="iconfont icon-github"></i></a><!-- Ins--><a title="instagram" target="_blank" rel="noopener nofollow" href="//www.instagram.com//"><i class="iconfont icon-ins"></i></a><!-- RSS--><!-- 知乎--><!-- 领英--><!-- 脸书--></section><p><span>Copyright ©</span><span> Antonio Marchán 2022</span></p><div class="is-flex is-justify-content-center is-flex-wrap-wrap"><p>Powered by Hexo</p><p class="is-flex is-justify-content-center"></p><div style="margin-top: 2px"></div></div><div><span></span></div></footer><script src="/js/post.js"></script></body></html>
