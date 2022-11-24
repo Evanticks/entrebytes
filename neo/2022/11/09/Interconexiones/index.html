@@ -81,7 +81,15 @@ insert into equipar values (&#39;102&#39;,&#39;004&#39;,to_date(&#39;2011/07/01&
 <p>¡¡Mucho ojo!! la restricción que he establecido en equipar, que es la foreign key que relaciona el código de armas con nuestra base de datos, llamará a la view que hemos creado y contendrá los datos de la consulta al servidor externo.</p>
 <p><img src="/images/sql-remoto.png" alt="remoto"></p>
 <p><img src="/images/sql-remoto2.png" alt="remoto"></p>
-<h2 id="Interconexion-entre-dos-bases-de-datos-Postgres"><a href="#Interconexion-entre-dos-bases-de-datos-Postgres" class="headerlink" title="Interconexión entre dos bases de datos Postgres."></a>Interconexión entre dos bases de datos Postgres.</h2><pre><code>postgres=# create database souls
+<h2 id="Interconexion-entre-dos-bases-de-datos-Postgres"><a href="#Interconexion-entre-dos-bases-de-datos-Postgres" class="headerlink" title="Interconexión entre dos bases de datos Postgres."></a>Interconexión entre dos bases de datos Postgres.</h2><p>Primero vamos a modificar el fichero &#x2F;etc&#x2F;postgresql&#x2F;13&#x2F;main&#x2F;postgresql.conf para abrir la escucha a la ip que quiera conectarse:<br><code>listen_addresses = &#39;*&#39;</code></p>
+<p><img src="/3.png" alt="listenaddr"></p>
+<p>Modificamos el fichero &#x2F;etc&#x2F;postgresql&#x2F;13&#x2F;main&#x2F;pg_hba.conf, y aladimos la siguiente línea:</p>
+<p><code>host    all             all             192.168.122.0/24        md5</code></p>
+<p><img src="/4.png" alt="pghba"></p>
+<p>Procedemos a reiniciar Postgres para efectuar los cambios:</p>
+<p><code>sudo systemctl restart postgresql</code></p>
+<p>Luego vamos a crear la base de datos souls, luego vamos a darle permiso al usuario antonio2 para poder manejar la base de datos:</p>
+<pre><code>postgres=# create database souls
 postgres-# ;
 CREATE DATABASE
 GRANT ALL PRIVILEGES ON DATABASE souls TO antonio2;
@@ -90,15 +98,15 @@ GRANT
 postgres=# grant usage on schema public to antonio2;
 GRANT
 </code></pre>
+<p>En el otro servidor establecemos la configuración de antonio1:</p>
 <pre><code>postgres=# create user antonio1 with password &#39;antonio1&#39;;
 CREATE ROLE
-postgres=# create database souls
-postgres-# ;
+postgres=# create database souls;
 CREATE DATABASE
-GRANT ALL PRIVILEGES ON DATABASE souls TO antonio2;
-postgres=# grant connect on database souls to antonio2;
+GRANT ALL PRIVILEGES ON DATABASE souls TO antonio1;
+postgres=# grant connect on database souls to antonio1;
 GRANT
-postgres=# grant usage on schema public to antonio2;
+postgres=# grant usage on schema public to antonio1;
 GRANT
 postgres=# \c souls;
 </code></pre>
@@ -225,10 +233,10 @@ USING &#39;PSQLU&#39;;
 
 Enlace con la base de datos creado.
 </code></pre>
-<p>Comprobamos que se pueda consultar el nombre de las armas en </p>
+<p>Comprobamos que se pueda consultar el nombre de las armas en <strong>CONEXIONPOSTGRES2</strong></p>
 <p><img src="/images/oracle-postgres.png" alt="Descripción de la imagen"></p>
 <h2 id="Interconexion-entre-Postgres-y-Oracle"><a href="#Interconexion-entre-Postgres-y-Oracle" class="headerlink" title="Interconexión entre Postgres y Oracle."></a>Interconexión entre Postgres y Oracle.</h2><p>Primero vamos a instalar unos paquetes que nos servirán tanto para establecer la conexión con Oracle como a la hora de compilar el Makefile que necesitaremos más adelante:</p>
-<p>apt install libaio1 postgresql-server-dev-all build-essential git</p>
+<p><code>apt install git build-essential libaio1 postgresql-server-dev-all -y</code></p>
 <p>Para realizar la interconexión entre Postgres y Oracle necesitaremos software de terceros, en mi caso vamos a descargar los paquetes que se encuentran en el siguiente enlace:</p>
 <p><a target="_blank" rel="noopener" href="https://drive.google.com/file/d/1UmBNjVLffaj-hXDXdi6hPGpz6CIZr8eN/view?usp=share_link">https://drive.google.com/file/d/1UmBNjVLffaj-hXDXdi6hPGpz6CIZr8eN/view?usp=share_link</a></p>
 <p>En él se encuentran los paquetes en formato.deb, del cual me ocupé de transformar con alien.</p>
