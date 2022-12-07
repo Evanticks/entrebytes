@@ -1,0 +1,336 @@
+<!DOCTYPE html><html class="appearance-auto" lang="en"><head><meta charset="UTF-8"><title>Procedimientos en Oracle y Postgres</title><meta name="description" content="Aprendiz de Informática"><meta name="viewport" content="width=device-width, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no, initial-scale=1"><!-- Google Analytics --><!-- End Google Analytics -->
+<!-- Baidu Analytics --><!-- End Baidu Analytics --><link rel="icon" href="/images/favicon.png"><link rel="stylesheet" href="/style/common/bulma.css"><link rel="stylesheet" href="/style/base.css"><link rel="stylesheet" href="/style/common/helper.css"><script src="/js/common.js"></script><link rel="stylesheet" href="/style/post.css"><link rel="stylesheet" href="/style/themes/highlight-theme-light.css"><script src="/js/highlight.pack.js"></script><meta name="description" content="ORACLEComenzaremos adjuntando el script de creación de tablas e inserciones de Postgres:
+CREATE TABLE DEPT
+(
+ DEPTNO NUMBER(2),
+ DNAME VARCHAR2(14),
+ LOC VARCHAR2(13),
+ CONSTRAINT PK_DEPT PRIMARY KEY (DEPTNO)
+);
+CREATE TABLE EMP
+(
+ EMPNO NUMBER(4),
+ ENAME VARCHAR2(10),
+ JOB VARCHAR2(9),
+ MGR NUMBER(4),
+ HIREDATE DATE,
+ SAL NUMBER(7, 2),
+ COMM NUMBER(7, 2),.."><meta name="generator" content="Hexo 6.3.0"><link rel="alternate" href="/atom.xml" title="Hexo" type="application/atom+xml">
+</head><body class="is-flex is-flex-direction-column"><header class="header-widget is-flex-shrink-0 is-hidden-mobile"><div class="container is-fullhd is-flex is-justify-content-space-between is-align-items-center is-full-height"><section class="is-hidden-mobile is-flex-shrink-0"><h2><a href="/">El blog de Antonio Marchán</a></h2></section><h3 class="is-hidden-mobile is-family-serif is-full-height is-flex is-align-items-center is-flex-shrink-0"><div class="is-full-height" id="postTopic"><p class="is-full-height is-flex-shrink-0 is-flex is-align-items-center is-justify-content-center">Procedimientos en Oracle y Postgres</p><p class="is-full-height is-flex-shrink-0 is-flex is-align-items-center is-justify-content-center">Volver arriba</p></div></h3><aside class="is-flex-shrink-0"><h3 class="is-inline-block"><a href="/">Inicio</a></h3><h3 class="is-inline-block"><a href="/about">Sobre mí</a></h3><h3 class="is-inline-block"><a href="/archives">Archivos</a></h3></aside></div></header><header class="is-flex header-widget is-flex-shrink-0 is-align-items-center is-justify-content-center is-hidden-tablet"><h3 class="is-inline-block"><a href="/">Inicio</a></h3><h3 class="is-inline-block"><a href="/about">Sobre mí</a></h3><h3 class="is-inline-block"><a href="/archives">Archivos</a></h3></header><main><main class="container is-max-widescreen content section post-page pt-4 px-4"><div class="columns is-flex-desktop is-justify-content-center is-flex-direction-row-reverse"><div class="column is-3 is-hidden-mobile"><ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#ORACLE"><span class="toc-text">ORACLE</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#1-Hacer-un-procedimiento-que-muestre-el-nombre-y-el-salario-del-empleado-cuyo-codigo-es-7082"><span class="toc-text">1. Hacer un procedimiento que muestre el nombre y el salario del empleado cuyo código es 7082</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#2-Hacer-un-procedimiento-que-reciba-como-parametro-un-codigo-de-empleado-y-devuelva-su-nombre"><span class="toc-text">2. Hacer un procedimiento que reciba como parámetro un código de empleado y devuelva su nombre</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#3-Hacer-un-procedimiento-que-devuelva-los-nombres-de-los-tres-empleados-mas-antiguos"><span class="toc-text">3. Hacer un procedimiento que devuelva los nombres de los tres empleados más antiguos</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#4-Hacer-un-procedimiento-que-reciba-el-nombre-de-un-tablespace-y-muestre-los-nombres-de-los-usuarios-que-lo-tienen-como-tablespace-por-defecto-Vista-DBA-USERS"><span class="toc-text">4. Hacer un procedimiento que reciba el nombre de un tablespace y muestre los nombres de los usuarios que lo tienen como tablespace por defecto (Vista DBA_USERS)</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#5-Modificar-el-procedimiento-anterior-para-que-haga-lo-mismo-pero-devolviendo-el-numero-de-usuarios-que-tienen-ese-tablespace-como-tablespace-por-defecto-Nota-Hay-que-convertir-el-procedimiento-en-funcion"><span class="toc-text">5. Modificar el procedimiento anterior para que haga lo mismo pero devolviendo el número de usuarios que tienen ese tablespace como tablespace por defecto. Nota: Hay que convertir el procedimiento en función</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#6-Hacer-un-procedimiento-llamado-mostrar-usuarios-por-tablespace-que-muestre-por-pantalla-un-listado-de-los-tablespaces-existentes-con-la-lista-de-usuarios-de-cada-uno-y-el-numero-de-los-mismos-asi-Vistas-DBA-TABLESPACES-y-DBA-USERS"><span class="toc-text">6. Hacer un procedimiento llamado mostrar_usuarios_por_tablespace que muestre por pantalla un listado de los tablespaces existentes con la lista de usuarios de cada uno y el número de los mismos, así: (Vistas DBA_TABLESPACES y DBA_USERS)</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#7-Hacer-un-procedimiento-llamado-mostrar-codigo-fuente-que-reciba-el-nombre-de-otro-procedimiento-y-muestre-su-codigo-fuente-DBA-SOURCE"><span class="toc-text">7. Hacer un procedimiento llamado mostrar_codigo_fuente  que reciba el nombre de otro procedimiento y muestre su código fuente. (DBA_SOURCE)</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#8-Hacer-un-procedimiento-llamado-mostrar-privilegios-usuario-que-reciba-el-nombre-de-un-usuario-y-muestre-sus-privilegios-de-sistema-y-sus-privilegios-sobre-objetos-DBA-SYS-PRIVS-y-DBA-TAB-PRIVS"><span class="toc-text">8. Hacer un procedimiento llamado mostrar_privilegios_usuario que reciba el nombre de un usuario y muestre sus privilegios de sistema y sus privilegios sobre objetos. (DBA_SYS_PRIVS y DBA_TAB_PRIVS)</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#9-Realiza-un-procedimiento-llamado-listar-comisiones-que-nos-muestre-por-pantalla-un-listado-de-las-comisiones-de-los-empleados-agrupados-segun-la-localidad-donde-esta-ubicado-su-departamento-con-el-siguiente-formato"><span class="toc-text">9. Realiza un procedimiento llamado listar_comisiones que nos muestre por pantalla un listado de las comisiones de los empleados agrupados según la localidad donde está ubicado su departamento con el siguiente formato:</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#10-Realiza-un-procedimiento-que-reciba-el-nombre-de-una-tabla-y-muestre-los-nombres-de-las-restricciones-que-tiene-a-que-columna-afectan-y-en-que-consisten-exactamente-DBA-TABLES-DBA-CONSTRAINTS-DBA-CONS-COLUMNS"><span class="toc-text">10. Realiza un procedimiento que reciba el nombre de una tabla y muestre los nombres de las restricciones que tiene, a qué columna afectan y en qué consisten exactamente. (DBA_TABLES, DBA_CONSTRAINTS, DBA_CONS_COLUMNS)</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#POSTGRESQL"><span class="toc-text">POSTGRESQL</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#1-Hacer-un-procedimiento-que-muestre-el-nombre-y-el-salario-del-empleado-cuyo-codigo-es-7082-1"><span class="toc-text">1. Hacer un procedimiento que muestre el nombre y el salario del empleado cuyo código es 7082</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#2-Hacer-un-procedimiento-que-reciba-como-parametro-un-codigo-de-empleado-y-devuelva-su-nombre-1"><span class="toc-text">2. Hacer un procedimiento que reciba como parámetro un código de empleado y devuelva su nombre</span></a></li></ol></li></ol></div><div class="column is-9"><header class="my-4"></header><h1 class="mt-0 mb-1 is-family-serif" id="postTitle">Procedimientos en Oracle y Postgres</h1><time class="has-text-grey" datetime="2022-12-07T01:39:06.680Z">2022-12-07</time><article class="mt-2 post-content"><h1 id="ORACLE"><a href="#ORACLE" class="headerlink" title="ORACLE"></a>ORACLE</h1><p>Comenzaremos adjuntando el script de creación de tablas e inserciones de Postgres:</p>
+<pre><code class="sql">CREATE TABLE DEPT
+(
+ DEPTNO NUMBER(2),
+ DNAME VARCHAR2(14),
+ LOC VARCHAR2(13),
+ CONSTRAINT PK_DEPT PRIMARY KEY (DEPTNO)
+);
+CREATE TABLE EMP
+(
+ EMPNO NUMBER(4),
+ ENAME VARCHAR2(10),
+ JOB VARCHAR2(9),
+ MGR NUMBER(4),
+ HIREDATE DATE,
+ SAL NUMBER(7, 2),
+ COMM NUMBER(7, 2),
+ DEPTNO NUMBER(2),
+ CONSTRAINT FK_DEPTNO FOREIGN KEY (DEPTNO) REFERENCES DEPT (DEPTNO),
+ CONSTRAINT PK_EMP PRIMARY KEY (EMPNO)
+);
+INSERT INTO DEPT VALUES (10, &#39;ACCOUNTING&#39;, &#39;NEW YORK&#39;);
+INSERT INTO DEPT VALUES (20, &#39;RESEARCH&#39;, &#39;DALLAS&#39;);
+INSERT INTO DEPT VALUES (30, &#39;SALES&#39;, &#39;CHICAGO&#39;);
+INSERT INTO DEPT VALUES (40, &#39;OPERATIONS&#39;, &#39;BOSTON&#39;);
+INSERT INTO EMP VALUES(7369, &#39;SMITH&#39;, &#39;CLERK&#39;, 7902,TO_DATE(&#39;17-DIC-1980&#39;, &#39;DD-MON-YYYY&#39;), 800, NULL, 20);
+INSERT INTO EMP VALUES(7499, &#39;ALLEN&#39;, &#39;SALESMAN&#39;, 7698,TO_DATE(&#39;20-FEB-1981&#39;, &#39;DD-MON-YYYY&#39;), 1600, 300, 30);
+INSERT INTO EMP VALUES(7521, &#39;WARD&#39;, &#39;SALESMAN&#39;, 7698,TO_DATE(&#39;22-FEB-1981&#39;, &#39;DD-MON-YYYY&#39;), 1250, 500, 30);
+INSERT INTO EMP VALUES(7566, &#39;JONES&#39;, &#39;MANAGER&#39;, 7839,TO_DATE(&#39;2-ABR-1981&#39;, &#39;DD-MON-YYYY&#39;), 2975, NULL, 20);
+INSERT INTO EMP VALUES(7654, &#39;MARTIN&#39;, &#39;SALESMAN&#39;, 7698,TO_DATE(&#39;28-SEP-1981&#39;, &#39;DD-MON-YYYY&#39;), 1250, 1400, 30);
+INSERT INTO EMP VALUES(7698, &#39;BLAKE&#39;, &#39;MANAGER&#39;, 7839,TO_DATE(&#39;1-MAY-1981&#39;, &#39;DD-MON-YYYY&#39;), 2850, NULL, 30);
+INSERT INTO EMP VALUES(7782, &#39;CLARK&#39;, &#39;MANAGER&#39;, 7839,TO_DATE(&#39;9-JUN-1981&#39;, &#39;DD-MON-YYYY&#39;), 2450, NULL, 10);
+INSERT INTO EMP VALUES(7788, &#39;SCOTT&#39;, &#39;ANALYST&#39;, 7566,TO_DATE(&#39;09-DIC-1982&#39;, &#39;DD-MON-YYYY&#39;), 3000, NULL, 20);
+INSERT INTO EMP VALUES(7839, &#39;KING&#39;, &#39;PRESIDENT&#39;, NULL,TO_DATE(&#39;17-NOV-1981&#39;, &#39;DD-MON-YYYY&#39;), 5000, NULL, 10);
+INSERT INTO EMP VALUES(7844, &#39;TURNER&#39;, &#39;SALESMAN&#39;, 7698,TO_DATE(&#39;8-SEP-1981&#39;, &#39;DD-MON-YYYY&#39;), 1500, 0, 30);
+INSERT INTO EMP VALUES(7876, &#39;ADAMS&#39;, &#39;CLERK&#39;, 7788,TO_DATE(&#39;12-ENE-1983&#39;, &#39;DD-MON-YYYY&#39;), 1100, NULL, 20);
+INSERT INTO EMP VALUES(7900, &#39;JAMES&#39;, &#39;CLERK&#39;, 7698,TO_DATE(&#39;3-DIC-1981&#39;, &#39;DD-MON-YYYY&#39;), 950, NULL, 30);
+INSERT INTO EMP VALUES(7902, &#39;FORD&#39;, &#39;ANALYST&#39;, 7566,TO_DATE(&#39;3-DIC-1981&#39;, &#39;DD-MON-YYYY&#39;), 3000, NULL, 20);
+INSERT INTO EMP VALUES(7934, &#39;MILLER&#39;, &#39;CLERK&#39;, 7782,TO_DATE(&#39;23-ENE-1982&#39;, &#39;DD-MON-YYYY&#39;), 1300, NULL, 10);
+
+COMMIT;
+</code></pre>
+<h2 id="1-Hacer-un-procedimiento-que-muestre-el-nombre-y-el-salario-del-empleado-cuyo-codigo-es-7082"><a href="#1-Hacer-un-procedimiento-que-muestre-el-nombre-y-el-salario-del-empleado-cuyo-codigo-es-7082" class="headerlink" title="1. Hacer un procedimiento que muestre el nombre y el salario del empleado cuyo código es 7082"></a>1. Hacer un procedimiento que muestre el nombre y el salario del empleado cuyo código es 7082</h2><pre><code class="sql">create or replace procedure mostrar_7082
+IS
+    v_nombre emp.ename%type;
+    v_sal emp.sal%type;
+BEGIN
+    select ename,sal into v_nombre,v_sal 
+    from emp
+    where empno= 7782;
+    dbms_output.put_line(&#39;El nombre del empleado 7082 es &#39; || v_nombre || &#39; y su salario es &#39; || v_sal );
+END;
+/
+</code></pre>
+<p><img src="/images/oracle-ejercicio1.png" alt="remoto"></p>
+<h2 id="2-Hacer-un-procedimiento-que-reciba-como-parametro-un-codigo-de-empleado-y-devuelva-su-nombre"><a href="#2-Hacer-un-procedimiento-que-reciba-como-parametro-un-codigo-de-empleado-y-devuelva-su-nombre" class="headerlink" title="2. Hacer un procedimiento que reciba como parámetro un código de empleado y devuelva su nombre"></a>2. Hacer un procedimiento que reciba como parámetro un código de empleado y devuelva su nombre</h2><pre><code class="sql">Create or replace procedure codigoanombreemp (p_codempleado emp.empno%type)
+IS
+    v_nombre emp.ename%type;
+BEGIN
+    select ename into v_nombre from emp where empno=p_codempleado;
+    dbms_output.put_line (&#39;El empleado con el código &#39; || p_codempleado || &#39; es &#39; || v_nombre);
+END;
+/
+</code></pre>
+<p><img src="/images/oracle-ejercicio2.png" alt="remoto"></p>
+<h2 id="3-Hacer-un-procedimiento-que-devuelva-los-nombres-de-los-tres-empleados-mas-antiguos"><a href="#3-Hacer-un-procedimiento-que-devuelva-los-nombres-de-los-tres-empleados-mas-antiguos" class="headerlink" title="3. Hacer un procedimiento que devuelva los nombres de los tres empleados más antiguos"></a>3. Hacer un procedimiento que devuelva los nombres de los tres empleados más antiguos</h2><pre><code class="sql">create or replace procedure tresempleadosmasantiguos
+IS
+cursor c_empleados is
+select ename from emp WHERE ROWNUM &lt;= 3 order by hiredate asc;
+BEGIN
+FOR v_empleados in c_empleados loop
+    dbms_output.put_line (v_empleados.ename);
+end loop;
+END;
+/
+</code></pre>
+<p><img src="/images/oracle-ejercicio5.png" alt="remoto"></p>
+<h2 id="4-Hacer-un-procedimiento-que-reciba-el-nombre-de-un-tablespace-y-muestre-los-nombres-de-los-usuarios-que-lo-tienen-como-tablespace-por-defecto-Vista-DBA-USERS"><a href="#4-Hacer-un-procedimiento-que-reciba-el-nombre-de-un-tablespace-y-muestre-los-nombres-de-los-usuarios-que-lo-tienen-como-tablespace-por-defecto-Vista-DBA-USERS" class="headerlink" title="4. Hacer un procedimiento que reciba el nombre de un tablespace y muestre los nombres de los usuarios que lo tienen como tablespace por defecto (Vista DBA_USERS)"></a>4. Hacer un procedimiento que reciba el nombre de un tablespace y muestre los nombres de los usuarios que lo tienen como tablespace por defecto (Vista DBA_USERS)</h2><pre><code class="sql">create or replace procedure tablespacedefecto (p_tablespace DBA_USERS.DEFAULT_TABLESPACE%type)
+IS
+cursor c_tablespace is
+SELECT USERNAME from DBA_USERS where DEFAULT_TABLESPACE=p_tablespace;
+BEGIN
+FOR v_usuarios in c_tablespace loop
+    dbms_output.put_line (v_usuarios.USERNAME);
+end loop;
+END;
+/
+</code></pre>
+<p><img src="/images/oracle-ejercicio3.png" alt="remoto"></p>
+<h2 id="5-Modificar-el-procedimiento-anterior-para-que-haga-lo-mismo-pero-devolviendo-el-numero-de-usuarios-que-tienen-ese-tablespace-como-tablespace-por-defecto-Nota-Hay-que-convertir-el-procedimiento-en-funcion"><a href="#5-Modificar-el-procedimiento-anterior-para-que-haga-lo-mismo-pero-devolviendo-el-numero-de-usuarios-que-tienen-ese-tablespace-como-tablespace-por-defecto-Nota-Hay-que-convertir-el-procedimiento-en-funcion" class="headerlink" title="5. Modificar el procedimiento anterior para que haga lo mismo pero devolviendo el número de usuarios que tienen ese tablespace como tablespace por defecto. Nota: Hay que convertir el procedimiento en función"></a>5. Modificar el procedimiento anterior para que haga lo mismo pero devolviendo el número de usuarios que tienen ese tablespace como tablespace por defecto. Nota: Hay que convertir el procedimiento en función</h2><pre><code class="sql">create or replace function tablespacedefecto (p_tablespace DBA_USERS.DEFAULT_TABLESPACE%type)
+return number
+IS
+v_num number (4);
+BEGIN
+SELECT count(USERNAME) into v_num from DBA_USERS where DEFAULT_TABLESPACE=p_tablespace;
+return v_num;
+END;
+/
+
+create or replace procedure mostrarfunciontablespacedefecto (p_tablespace DBA_USERS.DEFAULT_TABLESPACE%type)
+is
+v_num number;
+BEGIN
+    v_num:=tablespacedefecto(p_tablespace);
+    dbms_output.put_line (&#39;El tablespace &#39; || p_tablespace || &#39; lo tienen &#39; || v_num || &#39; usuarios.&#39;);
+end;
+/
+</code></pre>
+<p><img src="/images/oracle-ejercicio4.png" alt="remoto"></p>
+<h2 id="6-Hacer-un-procedimiento-llamado-mostrar-usuarios-por-tablespace-que-muestre-por-pantalla-un-listado-de-los-tablespaces-existentes-con-la-lista-de-usuarios-de-cada-uno-y-el-numero-de-los-mismos-asi-Vistas-DBA-TABLESPACES-y-DBA-USERS"><a href="#6-Hacer-un-procedimiento-llamado-mostrar-usuarios-por-tablespace-que-muestre-por-pantalla-un-listado-de-los-tablespaces-existentes-con-la-lista-de-usuarios-de-cada-uno-y-el-numero-de-los-mismos-asi-Vistas-DBA-TABLESPACES-y-DBA-USERS" class="headerlink" title="6. Hacer un procedimiento llamado mostrar_usuarios_por_tablespace que muestre por pantalla un listado de los tablespaces existentes con la lista de usuarios de cada uno y el número de los mismos, así: (Vistas DBA_TABLESPACES y DBA_USERS)"></a>6. Hacer un procedimiento llamado mostrar_usuarios_por_tablespace que muestre por pantalla un listado de los tablespaces existentes con la lista de usuarios de cada uno y el número de los mismos, así: (Vistas DBA_TABLESPACES y DBA_USERS)</h2><p>En  este ejercicio en concreto utilizaremos una función creada en el anterior ejercicio para este propósito.</p>
+<pre><code class="sql">create or replace procedure mostrar_usuarios_por_tablespace
+is
+cursor c_tablespace is
+select DISTINCT DEFAULT_TABLESPACE from DBA_USERS;
+BEGIN
+for v_tablespace in c_tablespace loop
+dbms_output.put_line(&#39;Tablespace &#39; || v_tablespace.DEFAULT_TABLESPACE || &#39;:&#39;);
+MOSTRARUSUARIOS(v_tablespace.DEFAULT_TABLESPACE);
+dbms_output.put_line(&#39;Total Usuarios Tablespace &#39;|| v_tablespace.DEFAULT_TABLESPACE || &#39;: &#39; || tablespacedefecto(v_tablespace.DEFAULT_TABLESPACE));
+end loop;
+end;
+/
+
+
+CREATE OR REPLACE PROCEDURE MOSTRARUSUARIOS (p_tablespace in out varchar2)
+is
+cursor c_nombre is
+select USERNAME FROM DBA_USERS WHERE DEFAULT_TABLESPACE=p_tablespace;
+BEGIN
+FOR v_nombre in c_nombre loop
+    dbms_output.put_line(&#39;Usuario &#39; || v_nombre.USERNAME );
+end loop;
+end;
+/
+</code></pre>
+<p><img src="/images/oracle-ejercicio6.png" alt="remoto"></p>
+<h2 id="7-Hacer-un-procedimiento-llamado-mostrar-codigo-fuente-que-reciba-el-nombre-de-otro-procedimiento-y-muestre-su-codigo-fuente-DBA-SOURCE"><a href="#7-Hacer-un-procedimiento-llamado-mostrar-codigo-fuente-que-reciba-el-nombre-de-otro-procedimiento-y-muestre-su-codigo-fuente-DBA-SOURCE" class="headerlink" title="7. Hacer un procedimiento llamado mostrar_codigo_fuente  que reciba el nombre de otro procedimiento y muestre su código fuente. (DBA_SOURCE)"></a>7. Hacer un procedimiento llamado mostrar_codigo_fuente  que reciba el nombre de otro procedimiento y muestre su código fuente. (DBA_SOURCE)</h2><pre><code class="sql">create or replace procedure mostrar_codigo_fuente (p_procedimiento varchar2)
+IS
+cursor c_fuente is
+select text from DBA_SOURCE where NAME=p_procedimiento;
+BEGIN
+FOR v_fuente in c_fuente loop
+    dbms_output.put_line(v_fuente.text);
+end loop;
+end;
+/
+</code></pre>
+<p><img src="/images/oracle-ejercicio7.png" alt="remoto"></p>
+<h2 id="8-Hacer-un-procedimiento-llamado-mostrar-privilegios-usuario-que-reciba-el-nombre-de-un-usuario-y-muestre-sus-privilegios-de-sistema-y-sus-privilegios-sobre-objetos-DBA-SYS-PRIVS-y-DBA-TAB-PRIVS"><a href="#8-Hacer-un-procedimiento-llamado-mostrar-privilegios-usuario-que-reciba-el-nombre-de-un-usuario-y-muestre-sus-privilegios-de-sistema-y-sus-privilegios-sobre-objetos-DBA-SYS-PRIVS-y-DBA-TAB-PRIVS" class="headerlink" title="8. Hacer un procedimiento llamado mostrar_privilegios_usuario que reciba el nombre de un usuario y muestre sus privilegios de sistema y sus privilegios sobre objetos. (DBA_SYS_PRIVS y DBA_TAB_PRIVS)"></a>8. Hacer un procedimiento llamado mostrar_privilegios_usuario que reciba el nombre de un usuario y muestre sus privilegios de sistema y sus privilegios sobre objetos. (DBA_SYS_PRIVS y DBA_TAB_PRIVS)</h2><pre><code class="sql">CREATE OR REPLACE PROCEDURE mostrar_privilegios_usuario (p_usuario DBA_USERS.USERNAME%TYPE)
+is
+cursor c_sistema is
+SELECT GRANTEE,PRIVILEGE FROM DBA_SYS_PRIVS WHERE GRANTEE=p_usuario;
+cursor c_objeto is
+SELECT GRANTEE,PRIVILEGE FROM DBA_TAB_PRIVS WHERE GRANTEE=p_usuario;
+BEGIN
+FOR v_sistema in c_sistema loop
+    dbms_output.put_line(&#39;Privilegio de sistema: &#39; || v_sistema.PRIVILEGE);
+end loop;
+FOR v_objeto in c_objeto loop
+    dbms_output.put_line(&#39;Privilegiode objetos: &#39; || v_objeto.PRIVILEGE);
+end loop;
+END;
+/
+</code></pre>
+<p><img src="/images/oracle-ejercicio8.png" alt="remoto"></p>
+<h2 id="9-Realiza-un-procedimiento-llamado-listar-comisiones-que-nos-muestre-por-pantalla-un-listado-de-las-comisiones-de-los-empleados-agrupados-segun-la-localidad-donde-esta-ubicado-su-departamento-con-el-siguiente-formato"><a href="#9-Realiza-un-procedimiento-llamado-listar-comisiones-que-nos-muestre-por-pantalla-un-listado-de-las-comisiones-de-los-empleados-agrupados-segun-la-localidad-donde-esta-ubicado-su-departamento-con-el-siguiente-formato" class="headerlink" title="9. Realiza un procedimiento llamado listar_comisiones que nos muestre por pantalla un listado de las comisiones de los empleados agrupados según la localidad donde está ubicado su departamento con el siguiente formato:"></a>9. Realiza un procedimiento llamado listar_comisiones que nos muestre por pantalla un listado de las comisiones de los empleados agrupados según la localidad donde está ubicado su departamento con el siguiente formato:</h2><pre><code class="sql">CREATE OR REPLACE PROCEDURE Listar_comisiones
+IS
+cursor c_localidad is
+select dname,loc from dept;
+v_total number(5);
+BEGIN
+select sum(comm) into v_total from emp; 
+FOR v_localidad in c_localidad loop
+    dbms_output.put_line(&#39;Localidad: &#39; || v_localidad.loc);
+    dbms_output.put_line(&#39;Departamento: &#39; || v_localidad.dname);
+    MOSTRARCOMISIONES(v_localidad.loc);
+end loop;
+dbms_output.put_line(&#39;Total comisiones en la empresa es de: &#39; || v_total);
+exception
+WHEN NO_DATA_FOUND then
+dbms_output.put_line(&#39;Hay tablas vacías&#39;);
+end;
+/
+
+CREATE OR REPLACE PROCEDURE MOSTRARCOMISIONES (p_localidad in out varchar2)
+IS
+cursor c_comisiones is
+select ename,comm from emp where deptno in (select deptno from dept where loc = p_localidad);
+v_total number(5);
+BEGIN
+select sum(comm) into v_total from emp where deptno in  (select deptno from dept where loc = p_localidad);
+FOR v_empleado in c_comisiones loop
+    dbms_output.put_line(&#39;Empleado: &#39; || v_empleado.ename || &#39;..................&#39; || v_empleado.comm);
+    if v_empleado.comm &gt; 10000 then
+        raise_application_error(-20001,&#39;Hay algún empleado con más de 10.000 de comisión&#39;);
+    end if;
+end loop;
+dbms_output.put_line(&#39;Total comisiones departamento: &#39; || p_localidad || &#39; es de: &#39; || v_total);
+END;
+/
+</code></pre>
+<p>Podemos ver en la imagen que se produce un raise ya que hay un usuario con más de 10.000 de comm.</p>
+<p><img src="/images/oracle-ejercicio9.png" alt="remoto"></p>
+<h2 id="10-Realiza-un-procedimiento-que-reciba-el-nombre-de-una-tabla-y-muestre-los-nombres-de-las-restricciones-que-tiene-a-que-columna-afectan-y-en-que-consisten-exactamente-DBA-TABLES-DBA-CONSTRAINTS-DBA-CONS-COLUMNS"><a href="#10-Realiza-un-procedimiento-que-reciba-el-nombre-de-una-tabla-y-muestre-los-nombres-de-las-restricciones-que-tiene-a-que-columna-afectan-y-en-que-consisten-exactamente-DBA-TABLES-DBA-CONSTRAINTS-DBA-CONS-COLUMNS" class="headerlink" title="10. Realiza un procedimiento que reciba el nombre de una tabla y muestre los nombres de las restricciones que tiene, a qué columna afectan y en qué consisten exactamente. (DBA_TABLES, DBA_CONSTRAINTS, DBA_CONS_COLUMNS)"></a>10. Realiza un procedimiento que reciba el nombre de una tabla y muestre los nombres de las restricciones que tiene, a qué columna afectan y en qué consisten exactamente. (DBA_TABLES, DBA_CONSTRAINTS, DBA_CONS_COLUMNS)</h2><pre><code class="sql">SELECT CONSTRAINT_NAME,CONSTRAINT_TYPE,SEARCH_CONDITION_VC FROM DBA_CONSTRAINTS WHERE TABLE_NAME=&#39;EQUIPAR&#39;;
+SELECT CONSTRAINT_NAME,COLUMN_NAME FROM DBA_CONS_COLUMNS WHERE TABLE_NAME = &#39;PERSONAJE&#39;;
+
+CREATE OR REPLACE PROCEDURE MOSTRARRESTRICCIONES (p_tabla varchar2)
+is
+v_tabla varchar2(50);
+BEGIN
+v_tabla:=p_tabla;
+MOSTRARCONSSYS (v_tabla);
+MOSTRARCONSTABS (v_tabla);
+end;
+/
+
+CREATE OR REPLACE PROCEDURE MOSTRARCONSSYS (p_tabla in out varchar2)
+IS
+cursor c_system is
+SELECT CONSTRAINT_NAME,CONSTRAINT_TYPE,SEARCH_CONDITION_VC FROM DBA_CONSTRAINTS WHERE TABLE_NAME=p_tabla;
+BEGIN
+FOR v_system in c_system loop
+    dbms_output.put_line(v_system.CONSTRAINT_NAME || &#39;Tipo de restricción: &#39; || v_system.CONSTRAINT_TYPE || v_system.SEARCH_CONDITION_VC);
+end loop;
+END;
+/
+
+
+CREATE OR REPLACE PROCEDURE MOSTRARCONSTABS (p_tabla in out varchar2)
+IS
+cursor c_tabs is
+SELECT CONSTRAINT_NAME,COLUMN_NAME FROM DBA_CONS_COLUMNS WHERE TABLE_NAME = p_tabla;
+BEGIN
+FOR v_tabs in c_tabs loop
+    dbms_output.put_line(&#39;Restricción: &#39; || v_tabs.CONSTRAINT_NAME || &#39; y la columna a la que hace referencia es: &#39; || v_tabs.COLUMN_NAME);
+end loop;
+END;
+/
+</code></pre>
+<p><img src="/images/oracle-ejercicio10.png" alt="remoto"></p>
+<h1 id="POSTGRESQL"><a href="#POSTGRESQL" class="headerlink" title="POSTGRESQL"></a>POSTGRESQL</h1><p>Comenzaremos adjuntando el script de creación de tablas e inserciones de Postgres:</p>
+<pre><code class="sql">create table dept(
+  deptno   decimal(2,0) not null,
+  dname    varchar(14),
+  loc      varchar(13));
+create table emp(
+  empno    decimal(4,0) not null,
+  ename    varchar(10),
+  job      varchar(9),
+  mgr      decimal(4,0),
+  hiredate date,
+  sal      decimal(7,2),
+  comm     decimal(7,2),  
+  deptno   decimal(2,0) not null);
+create table bonus(
+  ename    varchar(10),
+  job      varchar(9),
+  sal      decimal,
+  comm     decimal);
+create table salgrade(
+  grade    decimal,
+  losal    decimal,
+  hisal    decimal);
+create table dummy (
+  dummy    decimal);
+insert into dummy values (0);
+insert into DEPT (DEPTNO, DNAME, LOC)
+  select 10, &#39;ACCOUNTING&#39;, &#39;NEW YORK&#39; from dummy union all
+  select 20, &#39;RESEARCH&#39;,   &#39;DALLAS&#39;   from dummy union all
+  select 30, &#39;SALES&#39;,      &#39;CHICAGO&#39;  from dummy union all
+  select 40, &#39;OPERATIONS&#39;, &#39;BOSTON&#39;   from dummy;
+insert into emp (EMPNO, ENAME, JOB, MGR, HIREDATE, SAL, COMM, DEPTNO)
+  select 7839, &#39;KING&#39;,   &#39;PRESIDENT&#39;, cast(null as integer), to_date(&#39;17-11-1981&#39;,&#39;dd-mm-yyyy&#39;),    5000, cast(null as integer), 10 from dummy union all
+  select 7698, &#39;BLAKE&#39;,  &#39;MANAGER&#39;,   7839, to_date(&#39;1-5-1981&#39;,&#39;dd-mm-yyyy&#39;),      2850, cast(null as integer), 30 from dummy union all
+  select 7782, &#39;CLARK&#39;,  &#39;MANAGER&#39;,   7839, to_date(&#39;9-6-1981&#39;,&#39;dd-mm-yyyy&#39;),      2450, cast(null as integer), 10 from dummy union all
+  select 7566, &#39;JONES&#39;,  &#39;MANAGER&#39;,   7839, to_date(&#39;2-4-1981&#39;,&#39;dd-mm-yyyy&#39;),      2975, cast(null as integer), 20 from dummy union all
+  select 7788, &#39;SCOTT&#39;,  &#39;ANALYST&#39;,   7566, to_date(&#39;13-7-87&#39;,&#39;dd-mm-rr&#39;) - 85,  3000, cast(null as integer), 20 from dummy union all
+  select 7902, &#39;FORD&#39;,   &#39;ANALYST&#39;,   7566, to_date(&#39;3-12-1981&#39;,&#39;dd-mm-yyyy&#39;),     3000, cast(null as integer), 20 from dummy union all
+  select 7369, &#39;SMITH&#39;,  &#39;CLERK&#39;,     7902, to_date(&#39;17-12-1980&#39;,&#39;dd-mm-yyyy&#39;),     800, cast(null as integer), 20 from dummy union all
+  select 7499, &#39;ALLEN&#39;,  &#39;SALESMAN&#39;,  7698, to_date(&#39;20-2-1981&#39;,&#39;dd-mm-yyyy&#39;),     1600,  300, 30 from dummy union all
+  select 7521, &#39;WARD&#39;,   &#39;SALESMAN&#39;,  7698, to_date(&#39;22-2-1981&#39;,&#39;dd-mm-yyyy&#39;),     1250,  500, 30 from dummy union all
+  select 7654, &#39;MARTIN&#39;, &#39;SALESMAN&#39;,  7698, to_date(&#39;28-9-1981&#39;,&#39;dd-mm-yyyy&#39;),     1250, 1400, 30 from dummy union all
+  select 7844, &#39;TURNER&#39;, &#39;SALESMAN&#39;,  7698, to_date(&#39;8-9-1981&#39;,&#39;dd-mm-yyyy&#39;),      1500,    0, 30 from dummy union all
+  select 7876, &#39;ADAMS&#39;,  &#39;CLERK&#39;,     7788, to_date(&#39;13-7-87&#39;, &#39;dd-mm-rr&#39;) - 51, 1100, cast(null as integer), 20 from dummy union all
+  select 7900, &#39;JAMES&#39;,  &#39;CLERK&#39;,     7698, to_date(&#39;3-12-1981&#39;,&#39;dd-mm-yyyy&#39;),      950, cast(null as integer), 30 from dummy union all
+  select 7934, &#39;MILLER&#39;, &#39;CLERK&#39;,     7782, to_date(&#39;23-1-1982&#39;,&#39;dd-mm-yyyy&#39;),     1300, cast(null as integer), 10 from dummy;
+insert into salgrade
+  select 1,  700, 1200 from dummy union all
+  select 2, 1201, 1400 from dummy union all
+  select 3, 1401, 2000 from dummy union all
+  select 4, 2001, 3000 from dummy union all
+  select 5, 3001, 9999 from dummy;
+commit;
+</code></pre>
+<h2 id="1-Hacer-un-procedimiento-que-muestre-el-nombre-y-el-salario-del-empleado-cuyo-codigo-es-7082-1"><a href="#1-Hacer-un-procedimiento-que-muestre-el-nombre-y-el-salario-del-empleado-cuyo-codigo-es-7082-1" class="headerlink" title="1. Hacer un procedimiento que muestre el nombre y el salario del empleado cuyo código es 7082"></a>1. Hacer un procedimiento que muestre el nombre y el salario del empleado cuyo código es 7082</h2><pre><code class="sql">CREATE or replace PROCEDURE mostrar_7082() 
+AS $$
+DECLARE
+    v_nombre emp.ename%type;
+    v_salario emp.sal%type;
+BEGIN
+    select ename,sal into v_nombre,v_salario from emp where empno=7782;
+    RAISE NOTICE &#39;El nombre del empleado es %, y su salario es %&#39;, v_nombre,v_salario;
+END;
+$$ LANGUAGE plpgsql;
+</code></pre>
+<p><img src="/images/postgres-ejercicio2.png" alt="remoto"></p>
+<h2 id="2-Hacer-un-procedimiento-que-reciba-como-parametro-un-codigo-de-empleado-y-devuelva-su-nombre-1"><a href="#2-Hacer-un-procedimiento-que-reciba-como-parametro-un-codigo-de-empleado-y-devuelva-su-nombre-1" class="headerlink" title="2. Hacer un procedimiento que reciba como parámetro un código de empleado y devuelva su nombre"></a>2. Hacer un procedimiento que reciba como parámetro un código de empleado y devuelva su nombre</h2><pre><code class="sql">Create or replace procedure codigoanombreemp (p_codempleado emp.empno%type) 
+AS $$
+DECLARE
+    v_nombre emp.ename%type;
+BEGIN
+    select ename into v_nombre from emp where empno=p_codempleado;
+    RAISE NOTICE &#39;El empleado con el código %, es %&#39;, p_codempleado,v_nombre;
+END;
+$$ LANGUAGE plpgsql;
+</code></pre>
+<p><img src="/images/postgres-ejercicio1.png" alt="remoto"></p>
+</article><section class="jump-container is-flex is-justify-content-space-between my-6"><!-- em is empty placeholder--><em></em><a class="button is-default" href="/2022/11/16/Compilar-linux-a-medida/" title="Configurar kernel a medida"><span class="has-text-weight-semibold">Siguiente: Configurar kernel a medida</span><i class="iconfont icon-next ml-2 has-text-grey"></i></a></section><article class="mt-6 comment-container"><script async repo="Haojen/Claudia-theme-blog" src="https://utteranc.es/client.js" issue-term="pathname" theme="preferred-color-scheme"></script></article></div></div></main></main><footer class="is-flex is-flex-direction-column is-align-items-center is-flex-shrink-0 is-family-serif"><section class="sns-container"><!-- Github--><a title="github" target="_blank" rel="noopener nofollow" href="//github.com/evanticks"><i class="iconfont icon-github"></i></a><!-- Ins--><a title="instagram" target="_blank" rel="noopener nofollow" href="//www.instagram.com//"><i class="iconfont icon-ins"></i></a><!-- RSS--><!-- 知乎--><!-- 领英--><!-- 脸书--></section><p><span>Copyright ©</span><span> Antonio Marchán 2022</span></p><div class="is-flex is-justify-content-center is-flex-wrap-wrap"><p>Powered by Hexo</p><p class="is-flex is-justify-content-center"></p><div style="margin-top: 2px"></div></div><div><span></span></div></footer><script src="/js/post.js"></script></body></html>
