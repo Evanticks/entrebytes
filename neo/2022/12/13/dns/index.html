@@ -15,7 +15,7 @@ allow-transfer &#123; none ;&#125;;
 <p>Allow-transfer none hará que no se realicen transpasos completos en la información de la zona, esto nos permitirá que no podamos exponer información sensible dentro del servidor dns al realizar las consultas con dig.</p>
 <p>Tras esto, comenzaremos editando el fichero de configuración de zonas, el cual se encargará de administrar las plantillas a las que se les va a realizar una consulta dns con dig.</p>
 <p>&#x2F;etc&#x2F;bind&#x2F;named.conf.local</p>
-<pre><code>include &quot;/etc/bind/zones.rfc1918&quot;;
+<pre><code class="shell">include &quot;/etc/bind/zones.rfc1918&quot;;
 zone &quot;antonio.org&quot; &#123;
     type master;
     file &quot;db.antonio.org&quot;;
@@ -32,7 +32,7 @@ zone &quot;22.172.in-addr.arpa&quot; &#123;
 </code></pre>
 <p>Nuestra zona será antonio.org, el cual tendrá el fichero db.antonio.org, hasta ahí será necesario para ralizar solo un dns, para realizar el dns respaldado por un esclavo necesitaremos conceder el traspaso a la ip 172.22.7.171 que será la ip de la máquina esclava, más abajo nos econtraremos con el fichero de zona de resolución inversa, el cual tendrá el nombre del rango de ip que abarcará, y la misma transferencia de zona y el notify que será lo que avise al esclavo que ha habido un cambio en el maestro.</p>
 <p>Si nos vamos al fichero &#x2F;var&#x2F;cache&#x2F;bind&#x2F;db.antonio.org podemos ver los siguientes componentes:</p>
-<pre><code>$TTL    86400
+<pre><code class="shell">$TTL    86400
 @       IN      SOA     dns1.antonio.org. root.antonio.org. (
                               6         ; Serial
                          604800         ; Refresh
@@ -70,7 +70,7 @@ dns     IN      A     172.22.7.177
 <p>Los registros de tipo CNAME son nombres relacionados a otros nombres, como por ejemplo ftp, que va relacionado al nombre obelix y que tendrá la ip 172.22.200.103. entonces al realizar la consulta en el apartado ANSWER nos daría el nombre completo al que está asociado.</p>
 <p><img src="/images/obelix.png" alt="Descripción de la imagen"></p>
 <p>Ahora vamos con el fichero de zona de resolución inversa, el cual crearemos en &#x2F;var&#x2F;cache&#x2F;bind&#x2F;db.172.22.0.0</p>
-<pre><code>$TTL    86400
+<pre><code class="shell">$TTL    86400
 @       IN      SOA     dns1.antonio.org. root.antonio.org. (
                               1         ; Serial
                          604800         ; Refresh
@@ -98,7 +98,7 @@ $ORIGIN 22.172.in-addr.arpa.
 <p><code>apt update &amp;&amp; apt install bind9 -y</code></p>
 <p>Vamos a forzar la salida de las peutciones por ipv4, ya que al no estar configurado de esta forma pueden perderse paquetes al tratar de viajar a través de ipv6, esto lo haremos en &#x2F;etc&#x2F;default&#x2F;named, especificando esta sentencia en  <code>OPTIONS=&quot;-4 -f -u bind&quot;</code>.</p>
 <p>&#x2F;etc&#x2F;bind&#x2F;named.conf.local</p>
-<pre><code>include &quot;/etc/bind/zones.rfc1918&quot;;
+<pre><code class="shell">include &quot;/etc/bind/zones.rfc1918&quot;;
 zone &quot;antonio.org&quot; &#123;
     type slave;
     file &quot;db.antonio.org&quot;;
@@ -112,12 +112,12 @@ zone &quot;22.172.in-addr.arpa&quot; &#123;
 </code></pre>
 <p>Hacemos un <code>systemctl restart bind9</code> y <code>systemctl status bind9</code> para comprobar de que el servicio está activo y sin errores.</p>
 <p>Tras esto, cuando modifiquemos el servidor maestro subimos el serial de tal forma que sea mayor al de la máquina esclava, y de esta manera realizará la transferencia.</p>
-<p><img src="/images/obelix-3.png=" alt="Descripción de la imagen"></p>
+<p><img src="/images/obelix-3.png" alt="Descripción de la imagen"></p>
 <h2 id="Delegacion-de-subdominio"><a href="#Delegacion-de-subdominio" class="headerlink" title="Delegación de subdominio"></a>Delegación de subdominio</h2><p>Pra delegar un subdominio primero comenzaremos actualizando el sistema e instalando el servidor dns bind9, la máquina deberá tener un nombre full qualificated como en mi caso que sería <strong>dns.informatica.antonio.org</strong></p>
 <p><code>apt update &amp;&amp; apt install bind9 -y</code></p>
 <p>Vamos a forzar la salida de las peutciones por ipv4, ya que al no estar configurado de esta forma pueden perderse paquetes al tratar de viajar a través de ipv6, esto lo haremos en &#x2F;etc&#x2F;default&#x2F;named, especificando esta sentencia en  <code>OPTIONS=&quot;-4 -f -u bind&quot;</code>.</p>
 <p>Una vez hecho esto, como podemos ver en la máquina maestra, tenemos un apartado en db.antonio.org en el cual especificamos los siguientes parámetros:</p>
-<pre><code>$ORIGIN informatica.antonio.org.
+<pre><code class="shell">$ORIGIN informatica.antonio.org.
 @       IN      NS    dns
 dns     IN      A     172.22.7.177
 </code></pre>
@@ -129,7 +129,7 @@ dns     IN      A     172.22.7.177
 &#125;;
 </code></pre>
 <p>Luego nos vamos a &#x2F;var&#x2F;cache&#x2F;bind&#x2F;db.informatica.antonio.org</p>
-<pre><code>$TTL    86400
+<pre><code class="shell">$TTL    86400
 @       IN      SOA     dns.informatica.antonio.org. root.informatica.antonio.org. (
                               1         ; Serial
                          604800         ; Refresh
