@@ -6,7 +6,7 @@
   <link href="http://example.com/atom.xml" rel="self"/>
   
   <link href="http://example.com/"/>
-  <updated>2022-12-13T23:28:54.525Z</updated>
+  <updated>2023-01-03T20:44:10.792Z</updated>
   <id>http://example.com/</id>
   
   <author>
@@ -15,6 +15,27 @@
   </author>
   
   <generator uri="https://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>Montaje de volumen nfs a partir de systemd</title>
+    <link href="http://example.com/2023/01/03/nfs-systemd/"/>
+    <id>http://example.com/2023/01/03/nfs-systemd/</id>
+    <published>2023-01-03T13:43:02.309Z</published>
+    <updated>2023-01-03T20:44:10.792Z</updated>
+    
+    <content type="html"><![CDATA[<p><img src="/images/systemd-title.jpg" alt="status"></p><p>Vamos a empezar en la máquina servidor, que en nuestro caso será alfa, actualizamos el sistema e instalamos los paquetes necesarios para la instalación nfs en la máquina servidora que en nuestro caso será alfa.</p><pre><code>apt install nfs-kernel-server nfs-common</code></pre><p>Tras esto vamos a ingresar el nuevo volumen, en el escenario podría ser tanto físico como virtualizado, pero antes de realizar la configuración de systemd necesitaremos darle formato al sistema de archivos, que en nuestro caso será ext4.</p><p><code>mkfs.ext4 /dev/vdb</code></p><p>Una vez hecho esto podemos crear el archivo en &#x2F;etc&#x2F;systemd&#x2F;system&#x2F;srv-compartida.mount, es necesario que pongamos la ruta en la que va a estar la carpeta compartida a partir de ‘-‘ en vez de ‘&#x2F;‘ en el nombre del fichero a crear, .mount indica a systemd que es un archivo de montaje.</p><p>Ahora vamos a ver la sintaxis del archivo:</p><pre><code>[Unit]Description= volumen que va a ser montado para compartir nfs[Mount]What= /dev/vdbWhere= /srv/compartida/Type=ext4Options=defaults[Install]WantedBy=multi-user.target</code></pre><p>En [Unit] podemos poner la descripción de lo que va a realizar el servicio<br>En [Mount] es como una forma diferente de poner una línea del fstab, ya que se especifica el qué se va a montar, donde se va a montar, el tipo de archivo que va a ser y sus propias opciones de montaje.<br>En [Install] especificamos los usuarios a los que va a ser dirigido este servicio.</p><p>Una vez hecho esto vamos a ejecutar <code>systemctl enable srv-compartida.mount</code> para activar el servicio permanentemente y <code>systemctl start srv-compartida.mount</code> para iniciarlo.</p><p>Tras esto si hacemos systemctl status srv-compartida podemos ver que está activo el servicio</p><p><img src="/images/systemd-1.png" alt="status"></p><p>Ahora vamos a configurar el servidor nfs, en el cual debemos escribir la siguiente línea en el archivo de &#x2F;etc&#x2F;exports, pero antes debe estar creada la carpeta compartida.</p><p><code>/srv/compartida 172.16.0.200(rw,sync,no_subtree_check,all_squash)</code></p><p>luego ejecutamos <code>exportfs -a</code> para que el servicio nfs lea el fichero de &#x2F;etc&#x2F;exports.</p><p>Ahora vamos a pasar a la máquina cliente:</p><p>crearemos la carpeta en &#x2F;srv&#x2F;nfs y escribiremos en el archivo de &#x2F;etc&#x2F;systemd&#x2F;system&#x2F;srv-nfs.mount lo siguiente:</p><pre><code>[Unit]Description= Montaje de carpeta compartida NFS  [Mount]What=172.16.0.1:/srv/compartidaWhere=/srv/nfsType=nfsOptions=defaults[Install]WantedBy=multi-user.target</code></pre><p>Y tras esto:</p><pre><code>systemctl enable srv-nfs.mountsystemctl start srv-nfs.mount</code></pre><p>Ahora podemos comprobar que el servicio permanece activo:</p><p><img src="/images/systemd-2.png" alt="status"></p><p>Y vemos con un archivo de prueba que el servidor nfs funciona:</p><p><img src="/images/systemd-3.png" alt="nfs"></p>]]></content>
+    
+    
+      
+      
+    <summary type="html">&lt;p&gt;&lt;img src=&quot;/images/systemd-title.jpg&quot; alt=&quot;status&quot;&gt;&lt;/p&gt;
+&lt;p&gt;Vamos a empezar en la máquina servidor, que en nuestro caso será alfa, actualiz</summary>
+      
+    
+    
+    
+    
+  </entry>
   
   <entry>
     <title>Configurar un servidor DNS.</title>

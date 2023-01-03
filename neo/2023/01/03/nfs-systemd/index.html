@@ -1,0 +1,56 @@
+<!DOCTYPE html><html class="appearance-auto" lang="en"><head><meta charset="UTF-8"><title>Montaje de volumen nfs a partir de systemd</title><meta name="description" content="Aprendiz de Informática"><meta name="viewport" content="width=device-width, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no, initial-scale=1"><!-- Google Analytics --><!-- End Google Analytics -->
+<!-- Baidu Analytics --><!-- End Baidu Analytics --><link rel="icon" href="/images/favicon.png"><link rel="stylesheet" href="/style/common/bulma.css"><link rel="stylesheet" href="/style/base.css"><link rel="stylesheet" href="/style/common/helper.css"><script src="/js/common.js"></script><link rel="stylesheet" href="/style/post.css"><link rel="stylesheet" href="/style/themes/highlight-theme-light.css"><script src="/js/highlight.pack.js"></script><meta name="description" content="
+Vamos a empezar en la máquina servidor, que en nuestro caso será alfa, actualizamos el sistema e instalamos los paquetes necesarios para la instalación nfs en la máquina servidora que en nuestro caso será alfa.
+apt install nfs-kernel-server nfs-common
+
+Tras esto vamos a ingresar el nuevo volumen, en el escenario podría ser tanto físico como virtualizado, .."><meta name="generator" content="Hexo 6.3.0"><link rel="alternate" href="/atom.xml" title="Hexo" type="application/atom+xml">
+</head><body class="is-flex is-flex-direction-column"><header class="header-widget is-flex-shrink-0 is-hidden-mobile"><div class="container is-fullhd is-flex is-justify-content-space-between is-align-items-center is-full-height"><section class="is-hidden-mobile is-flex-shrink-0"><h2><a href="/">El blog de Antonio Marchán</a></h2></section><h3 class="is-hidden-mobile is-family-serif is-full-height is-flex is-align-items-center is-flex-shrink-0"><div class="is-full-height" id="postTopic"><p class="is-full-height is-flex-shrink-0 is-flex is-align-items-center is-justify-content-center">Montaje de volumen nfs a partir de systemd</p><p class="is-full-height is-flex-shrink-0 is-flex is-align-items-center is-justify-content-center">Volver arriba</p></div></h3><aside class="is-flex-shrink-0"><h3 class="is-inline-block"><a href="/">Inicio</a></h3><h3 class="is-inline-block"><a href="/about">Sobre mí</a></h3><h3 class="is-inline-block"><a href="/archives">Archivos</a></h3></aside></div></header><header class="is-flex header-widget is-flex-shrink-0 is-align-items-center is-justify-content-center is-hidden-tablet"><h3 class="is-inline-block"><a href="/">Inicio</a></h3><h3 class="is-inline-block"><a href="/about">Sobre mí</a></h3><h3 class="is-inline-block"><a href="/archives">Archivos</a></h3></header><main><main class="container is-max-widescreen content section post-page pt-4 px-4"><div class="columns is-flex-desktop is-justify-content-center is-flex-direction-row-reverse"><div class="column is-3 is-hidden-mobile is-hidden"></div><div class="column is-9"><header class="my-4"></header><h1 class="mt-0 mb-1 is-family-serif" id="postTitle">Montaje de volumen nfs a partir de systemd</h1><time class="has-text-grey" datetime="2023-01-03T13:43:02.309Z">2023-01-03</time><article class="mt-2 post-content"><p><img src="/images/systemd-title.jpg" alt="status"></p>
+<p>Vamos a empezar en la máquina servidor, que en nuestro caso será alfa, actualizamos el sistema e instalamos los paquetes necesarios para la instalación nfs en la máquina servidora que en nuestro caso será alfa.</p>
+<pre><code>apt install nfs-kernel-server nfs-common
+</code></pre>
+<p>Tras esto vamos a ingresar el nuevo volumen, en el escenario podría ser tanto físico como virtualizado, pero antes de realizar la configuración de systemd necesitaremos darle formato al sistema de archivos, que en nuestro caso será ext4.</p>
+<p><code>mkfs.ext4 /dev/vdb</code></p>
+<p>Una vez hecho esto podemos crear el archivo en &#x2F;etc&#x2F;systemd&#x2F;system&#x2F;srv-compartida.mount, es necesario que pongamos la ruta en la que va a estar la carpeta compartida a partir de ‘-‘ en vez de ‘&#x2F;‘ en el nombre del fichero a crear, .mount indica a systemd que es un archivo de montaje.</p>
+<p>Ahora vamos a ver la sintaxis del archivo:</p>
+<pre><code>[Unit]
+Description= volumen que va a ser montado para compartir nfs
+
+[Mount]
+What= /dev/vdb
+Where= /srv/compartida/
+Type=ext4
+Options=defaults
+
+[Install]
+WantedBy=multi-user.target
+</code></pre>
+<p>En [Unit] podemos poner la descripción de lo que va a realizar el servicio<br>En [Mount] es como una forma diferente de poner una línea del fstab, ya que se especifica el qué se va a montar, donde se va a montar, el tipo de archivo que va a ser y sus propias opciones de montaje.<br>En [Install] especificamos los usuarios a los que va a ser dirigido este servicio.</p>
+<p>Una vez hecho esto vamos a ejecutar <code>systemctl enable srv-compartida.mount</code> para activar el servicio permanentemente y <code>systemctl start srv-compartida.mount</code> para iniciarlo.</p>
+<p>Tras esto si hacemos systemctl status srv-compartida podemos ver que está activo el servicio</p>
+<p><img src="/images/systemd-1.png" alt="status"></p>
+<p>Ahora vamos a configurar el servidor nfs, en el cual debemos escribir la siguiente línea en el archivo de &#x2F;etc&#x2F;exports, pero antes debe estar creada la carpeta compartida.</p>
+<p><code>/srv/compartida 172.16.0.200(rw,sync,no_subtree_check,all_squash)</code></p>
+<p>luego ejecutamos <code>exportfs -a</code> para que el servicio nfs lea el fichero de &#x2F;etc&#x2F;exports.</p>
+<p>Ahora vamos a pasar a la máquina cliente:</p>
+<p>crearemos la carpeta en &#x2F;srv&#x2F;nfs y escribiremos en el archivo de &#x2F;etc&#x2F;systemd&#x2F;system&#x2F;srv-nfs.mount lo siguiente:</p>
+<pre><code>[Unit]
+Description= Montaje de carpeta compartida NFS  
+
+[Mount]
+What=172.16.0.1:/srv/compartida
+Where=/srv/nfs
+Type=nfs
+Options=defaults
+
+[Install]
+WantedBy=multi-user.target
+</code></pre>
+<p>Y tras esto:</p>
+<pre><code>systemctl enable srv-nfs.mount
+systemctl start srv-nfs.mount
+</code></pre>
+<p>Ahora podemos comprobar que el servicio permanece activo:</p>
+<p><img src="/images/systemd-2.png" alt="status"></p>
+<p>Y vemos con un archivo de prueba que el servidor nfs funciona:</p>
+<p><img src="/images/systemd-3.png" alt="nfs"></p>
+</article><section class="jump-container is-flex is-justify-content-space-between my-6"><!-- em is empty placeholder--><em></em><a class="button is-default" href="/2022/12/13/dns/" title="Configurar un servidor DNS."><span class="has-text-weight-semibold">Siguiente: Configurar un servidor DNS.</span><i class="iconfont icon-next ml-2 has-text-grey"></i></a></section><article class="mt-6 comment-container"><script async repo="Haojen/Claudia-theme-blog" src="https://utteranc.es/client.js" issue-term="pathname" theme="preferred-color-scheme"></script></article></div></div></main></main><footer class="is-flex is-flex-direction-column is-align-items-center is-flex-shrink-0 is-family-serif"><section class="sns-container"><!-- Github--><a title="github" target="_blank" rel="noopener nofollow" href="//github.com/evanticks"><i class="iconfont icon-github"></i></a><!-- Ins--><a title="instagram" target="_blank" rel="noopener nofollow" href="//www.instagram.com//"><i class="iconfont icon-ins"></i></a><!-- RSS--><!-- 知乎--><!-- 领英--><!-- 脸书--></section><p><span>Copyright ©</span><span> Antonio Marchán 2023</span></p><div class="is-flex is-justify-content-center is-flex-wrap-wrap"><p>Powered by Hexo</p><p class="is-flex is-justify-content-center"></p><div style="margin-top: 2px"></div></div><div><span></span></div></footer><script src="/js/post.js"></script></body></html>
