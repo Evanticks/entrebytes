@@ -1,0 +1,16 @@
+{
+    "version": "https://jsonfeed.org/version/1",
+    "title": "Hexo • All posts by \"almacenamiento\" category",
+    "description": "",
+    "home_page_url": "http://example.com",
+    "items": [
+        {
+            "id": "http://example.com/2023/01/26/iscsi/",
+            "url": "http://example.com/2023/01/26/iscsi/",
+            "title": "iSCSI",
+            "date_published": "2023-01-26T07:49:37.974Z",
+            "content_html": "<h2 id=\"servidor\"><a class=\"markdownIt-Anchor\" href=\"#servidor\">#</a> Servidor</h2>\n<p>Actualizamos los paquetes e instalamos:</p>\n<figure class=\"highlight bash\"><figcaption data-lang=\"bash\"></figcaption><table><tr><td data-num=\"1\"></td><td><pre><span class=\"token function\">apt</span> update</pre></td></tr><tr><td data-num=\"2\"></td><td><pre><span class=\"token function\">apt</span> <span class=\"token function\">install</span> tgt</pre></td></tr></table></figure><p>este programa funciona con targets, crearemos uno:<br>\n <code>sudo tgtadm --lld iscsi --op new --mode target --tid 1 -T iqn.2021-11.org.example:target1</code></p>\n<p>Añadimos una unidad lógica llamada LUM:<br>\n <code>sudo tgtadm --lld iscsi --op new --mode logicalunit --tid 1 --lun 1 -b /dev/vdb</code></p>\n<p><img src=\"/images/iscsi-1.png\" alt=\"Descripción de la imagen\"></p>\n<p>sudo tgtadm --lld iscsi --op bind --mode target --tid 1 -I ALL</p>\n<p>para hacerlo persistente:</p>\n<p><code>tgt-admin -s</code> <br>\n <code>tgt-admin --dump &gt; /etc/tgt/conf.d/example.es.conf</code></p>\n<h2 id=\"cliente\"><a class=\"markdownIt-Anchor\" href=\"#cliente\">#</a> Cliente</h2>\n<p>Escaneamos los dispositivos iSCSI disponibles, he empleado el nombre servidor porque Vagrant tiene resolución interna de nombres:</p>\n<p>sudo iscsiadm --mode discovery --type sendtargets --portal servidor</p>\n<p>iscsiadm --mode node -T iqn.2021-11.org.example:target1 --portal servidor --login</p>\n<p>Luego le damos formato al nuevo dispositivo:</p>\n<p>sudo mkfs.ext4 /dev/sda<br>\nmkdir /mnt/iscsi<br>\nlo montamos en /mnt/iscsi</p>\n<p><img src=\"/images/iscsi-3.png\" alt=\"Descripción de la imagen\"></p>\n<p>Para hacerlo persistente:</p>\n<p>sudo iscsiadm --mode node -T iqn.2021-11.org.example:target1 --portal servidor -o update -n node.startup -v automatic</p>\n<p>sudo nano /etc/systemd/system/mnt-iscsi.mount</p>\n<pre><code>[Unit]\nDescription=Disco iSCSI\n\n[Mount]\nWhat=/dev/sda\nWhere=/mnt/iscsi\nType=ext4\nOptions=_netdev\n\n[Install]\nWantedBy=multi-user.target\n\n</code></pre>\n<p><img src=\"/images/iscsi-2.png\" alt=\"Descripción de la imagen\"></p>\n",
+            "tags": []
+        }
+    ]
+}

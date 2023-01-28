@@ -1,0 +1,16 @@
+{
+    "version": "https://jsonfeed.org/version/1",
+    "title": "Hexo • All posts by \"implantación de aplicaciones\" category",
+    "description": "",
+    "home_page_url": "http://example.com",
+    "items": [
+        {
+            "id": "http://example.com/2023/01/26/docker/",
+            "url": "http://example.com/2023/01/26/docker/",
+            "title": "Docker",
+            "date_published": "2023-01-26T09:39:15.156Z",
+            "content_html": "<p>docker run -d --name servidor_mysql <br>\n–network rednextcloud <br>\n-v /home/antonio/nextcloud-mariadb:/var/lib/mysql <br>\n-e MYSQL_DATABASE=nextcloud <br>\n-e MYSQL_USER=nextcloud <br>\n-e MYSQL_PASSWORD=antonio <br>\n-e MYSQL_ROOT_PASSWORD=hola <br>\nmariadb</p>\n<p>docker run -d --name nexcloud <br>\n–network rednextcloud <br>\n-v /home/antonio/nextcloud:/var/www/html <br>\n-e MYSQL_DATABASE=nextcloud <br>\n-e MYSQL_USER=nextcloud <br>\n-e MYSQL_PASSWORD=antonio <br>\n-e MYSQL_HOST=servidor_mysql <br>\n-p 8080:80 <br>\nnextcloud</p>\n",
+            "tags": []
+        }
+    ]
+}

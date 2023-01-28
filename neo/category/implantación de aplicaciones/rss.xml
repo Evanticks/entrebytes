@@ -1,0 +1,38 @@
+<?xml version="1.0"?>
+<rss version="2.0">
+    <channel>
+        <title>Hexo • Posts by &#34;implantación de aplicaciones&#34; category</title>
+        <link>http://example.com</link>
+        <description></description>
+        <language>en</language>
+        <pubDate>Thu, 26 Jan 2023 10:39:15 +0100</pubDate>
+        <lastBuildDate>Thu, 26 Jan 2023 10:39:15 +0100</lastBuildDate>
+        <category>Servicios de Red e Internet</category>
+        <category>Sistemas Operativos</category>
+        <category>Seguridad</category>
+        <item>
+            <guid isPermalink="true">http://example.com/2023/01/26/docker/</guid>
+            <title>Docker</title>
+            <link>http://example.com/2023/01/26/docker/</link>
+            <pubDate>Thu, 26 Jan 2023 10:39:15 +0100</pubDate>
+            <description><![CDATA[ &lt;p&gt;docker run -d --name servidor_mysql &lt;br&gt;
+–network rednextcloud &lt;br&gt;
+-v /home/antonio/nextcloud-mariadb:/var/lib/mysql &lt;br&gt;
+-e MYSQL_DATABASE=nextcloud &lt;br&gt;
+-e MYSQL_USER=nextcloud &lt;br&gt;
+-e MYSQL_PASSWORD=antonio &lt;br&gt;
+-e MYSQL_ROOT_PASSWORD=hola &lt;br&gt;
+mariadb&lt;/p&gt;
+&lt;p&gt;docker run -d --name nexcloud &lt;br&gt;
+–network rednextcloud &lt;br&gt;
+-v /home/antonio/nextcloud:/var/www/html &lt;br&gt;
+-e MYSQL_DATABASE=nextcloud &lt;br&gt;
+-e MYSQL_USER=nextcloud &lt;br&gt;
+-e MYSQL_PASSWORD=antonio &lt;br&gt;
+-e MYSQL_HOST=servidor_mysql &lt;br&gt;
+-p 8080:80 &lt;br&gt;
+nextcloud&lt;/p&gt;
+ ]]></description>
+        </item>
+    </channel>
+</rss>

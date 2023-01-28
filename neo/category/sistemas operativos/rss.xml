@@ -1,0 +1,187 @@
+<?xml version="1.0"?>
+<rss version="2.0">
+    <channel>
+        <title>Hexo • Posts by &#34;sistemas operativos&#34; category</title>
+        <link>http://example.com</link>
+        <description></description>
+        <language>en</language>
+        <pubDate>Tue, 03 Jan 2023 14:43:02 +0100</pubDate>
+        <lastBuildDate>Tue, 03 Jan 2023 14:43:02 +0100</lastBuildDate>
+        <category>Servicios de Red e Internet</category>
+        <category>Sistemas Operativos</category>
+        <category>Seguridad</category>
+        <item>
+            <guid isPermalink="true">http://example.com/2023/01/03/nfs-systemd/</guid>
+            <title>Montaje de volumen nfs a partir de systemd</title>
+            <link>http://example.com/2023/01/03/nfs-systemd/</link>
+            <pubDate>Tue, 03 Jan 2023 14:43:02 +0100</pubDate>
+            <description><![CDATA[ &lt;p&gt;&lt;img src=&#34;/images/systemd-title.jpg&#34; alt=&#34;status&#34;&gt;&lt;/p&gt;
+&lt;p&gt;Vamos a empezar en la máquina servidor, que en nuestro caso será alfa, actualizamos el sistema e instalamos los paquetes necesarios para la instalación nfs en la máquina servidora que en nuestro caso será alfa.&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;apt install nfs-kernel-server nfs-common
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;Tras esto vamos a ingresar el nuevo volumen, en el escenario podría ser tanto físico como virtualizado, pero antes de realizar la configuración de systemd necesitaremos darle formato al sistema de archivos, que en nuestro caso será ext4.&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;mkfs.ext4 /dev/vdb&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;Una vez hecho esto podemos crear el archivo en &amp;#x2F;etc&amp;#x2F;systemd&amp;#x2F;system&amp;#x2F;srv-compartida.mount, es necesario que pongamos la ruta en la que va a estar la carpeta compartida a partir de ‘-‘ en vez de ‘&amp;#x2F;‘ en el nombre del fichero a crear, .mount indica a systemd que es un archivo de montaje.&lt;/p&gt;
+&lt;p&gt;Ahora vamos a ver la sintaxis del archivo:&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;[Unit]
+Description= volumen que va a ser montado para compartir nfs
+
+[Mount]
+What= /dev/vdb
+Where= /srv/compartida/
+Type=ext4
+Options=defaults
+
+[Install]
+WantedBy=multi-user.target
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;En [Unit] podemos poner la descripción de lo que va a realizar el servicio&lt;br&gt;En [Mount] es como una forma diferente de poner una línea del fstab, ya que se especifica el qué se va a montar, donde se va a montar, el tipo de archivo que va a ser y sus propias opciones de montaje.&lt;br&gt;En [Install] especificamos los usuarios a los que va a ser dirigido este servicio.&lt;/p&gt;
+&lt;p&gt;Una vez hecho esto vamos a ejecutar &lt;code&gt;systemctl enable srv-compartida.mount&lt;/code&gt; para activar el servicio permanentemente y &lt;code&gt;systemctl start srv-compartida.mount&lt;/code&gt; para iniciarlo.&lt;/p&gt;
+&lt;p&gt;Tras esto si hacemos systemctl status srv-compartida podemos ver que está activo el servicio&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;/images/systemd-1.png&#34; alt=&#34;status&#34;&gt;&lt;/p&gt;
+&lt;p&gt;Ahora vamos a configurar el servidor nfs, en el cual debemos escribir la siguiente línea en el archivo de &amp;#x2F;etc&amp;#x2F;exports, pero antes debe estar creada la carpeta compartida.&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;/srv/compartida 172.16.0.200(rw,sync,no_subtree_check,all_squash)&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;luego ejecutamos &lt;code&gt;exportfs -a&lt;/code&gt; para que el servicio nfs lea el fichero de &amp;#x2F;etc&amp;#x2F;exports.&lt;/p&gt;
+&lt;p&gt;Ahora vamos a pasar a la máquina cliente:&lt;/p&gt;
+&lt;p&gt;crearemos la carpeta en &amp;#x2F;srv&amp;#x2F;nfs y escribiremos en el archivo de &amp;#x2F;etc&amp;#x2F;systemd&amp;#x2F;system&amp;#x2F;srv-nfs.mount lo siguiente:&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;[Unit]
+Description= Montaje de carpeta compartida NFS  
+
+[Mount]
+What=172.16.0.1:/srv/compartida
+Where=/srv/nfs
+Type=nfs
+Options=defaults
+
+[Install]
+WantedBy=multi-user.target
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;Y tras esto:&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;systemctl enable srv-nfs.mount
+systemctl start srv-nfs.mount
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;Ahora podemos comprobar que el servicio permanece activo:&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;/images/systemd-2.png&#34; alt=&#34;status&#34;&gt;&lt;/p&gt;
+&lt;p&gt;Y vemos con un archivo de prueba que el servidor nfs funciona:&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;/images/systemd-3.png&#34; alt=&#34;nfs&#34;&gt;&lt;/p&gt;
+ ]]></description>
+        </item>
+        <item>
+            <guid isPermalink="true">http://example.com/2022/11/16/Compilar-linux-a-medida/</guid>
+            <title>Configurar kernel a medida</title>
+            <link>http://example.com/2022/11/16/Compilar-linux-a-medida/</link>
+            <category>Sistemas Operativos</category>
+            <pubDate>Wed, 16 Nov 2022 22:49:54 +0100</pubDate>
+            <description><![CDATA[ &lt;p&gt;&lt;img src=&#34;/images/linux-6.0.jpg&#34; alt=&#34;Descripción de la imagen&#34;&gt;&lt;/p&gt;
+&lt;p&gt;Comenzaremos creando una carpeta que nos sirva de entorno de trabajo&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;mkdir kernel &amp;amp;&amp;amp; cd kernel&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;Instalamos las dependencias que nos ayudarán a compilar el kernel, el cual nos ahorrará errores en la compilación:&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;sudo apt install build-essential flex nbison openssl libssl-dev dkms libncurses-dev ncurses-dev qtbase5-dev libelf-dev&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;Nos vamos ahora a kernel.org a descargarnos la última versión del kernel de linux.&lt;/p&gt;
+&lt;p&gt;Una vez descargado el kernel lo descomprimimos con el comando tar -xvf linux-6.0.7.tar.gz, ingresamos dentro y vemos que entre muchos archivos, encontramos un makefile, entramos dentro y encontraremos el archivo EXTRAVERSION, el cual pondremos una versión para poder llevar un control de versiones.&lt;/p&gt;
+&lt;p&gt;Entramos dentro del directorio descomprimido y procedemos a generar el &lt;code&gt;make oldconfig&lt;/code&gt; que creará el archivo .config con los módulos que deberemos compilar, intentamos contestar a las preguntas de forma negativa para que no genere módulos opcionales.&lt;/p&gt;
+&lt;p&gt;Una vez hecho esto debemos de adaptar los módulos que está utilizando nuestra máquina para compilar el kernel a medida, entonces utilizaremos un &lt;code&gt;make localyesconfig&lt;/code&gt;&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;╭─antonio@debian ~/Programas/kernel/linux-6.0.7  
+╰─➤  egrep &amp;#39;=y&amp;#39; .config | wc -l                                                                                                 130 ↵
+1934
+╭─antonio@debian ~/Programas/kernel/linux-6.0.7  
+╰─➤  egrep &amp;#39;=m&amp;#39; .config | wc -l
+3
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;Una vez hecho esto procederemos a probar nuestro kernel a medida &lt;code&gt;make -j8 bindeb-pkg&lt;/code&gt; pudiendo así compilar el kernel, le otorgaremos 8 jobs y si agregamos un time &lt;code&gt;time make -j8 bindeb-pkg&lt;/code&gt; podemos ver la duración que ha tardado el sistema en compilarlo.&lt;/p&gt;
+&lt;p&gt;Reiniciamos nuestra máquina y entramos en el nuevo kernel, utilizamos &lt;code&gt;uname -r&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;Luego volvemos a nuestro kernel, y en concreto a nuestro espacio de trabajo, ejecutamos un &lt;code&gt;make clean&lt;/code&gt; para eliminar los ‘residuos’ generados tras al compilación, y hacemos un control de versiones del .config, como nos funcionó la primera versión realizamos un &lt;code&gt;cp .config ../v1.config&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;/images/xconfig.png&#34; alt=&#34;Descripción de la imagen&#34;&gt;&lt;/p&gt;
+ ]]></description>
+        </item>
+        <item>
+            <guid isPermalink="true">http://example.com/2022/10/04/Preseed-pxe/</guid>
+            <title>Instalación preseed PXE+APACHE</title>
+            <link>http://example.com/2022/10/04/Preseed-pxe/</link>
+            <pubDate>Tue, 04 Oct 2022 21:21:24 +0200</pubDate>
+            <description><![CDATA[ &lt;p&gt;Vamos a crear la máquina virtual como hicimos anteriormente en &lt;a href=&#34;https://entrebytes.neocities.org/2022/09/30/preseed/&#34;&gt;Instalación automatizada basada en medio de almacenamiento extraíble.&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;En vagrant creamos una máquina que tenga una ip estática 192.168.100.3 que va a ser la tarjeta de red por la que funcionará pxe, en mi caso no creó esa ip y la tuve que escribir a mano en el &amp;#x2F;etc&amp;#x2F;network&amp;#x2F;interfaces, la otra tarjeta de red es la de vagrant-libvirt que será la que nos conecte al exterior.&lt;/p&gt;
+&lt;p&gt;Para proceder a configurar el protocolo &lt;strong&gt;TFTP&lt;/strong&gt; Y &lt;strong&gt;DHCP&lt;/strong&gt; para que sea el host el que conceda ip a la máquina y establezca la conexión al preseed, utilizando dnsmasq&lt;/p&gt;
+&lt;p&gt;apt install dnsmasq&lt;/p&gt;
+&lt;p&gt;Establecemos en el fichero &amp;#x2F;etc&amp;#x2F;dnsmaq.conf con los siguientes parámetros:&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;dhcp-range=192.168.100.100,192.168.100.200,255.255.255.0&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;Establecemos el fichero con  el que va a bootear el dhcp:&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;dhcp-boot=pxelinux.0&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;Habilitamos el tftp:&lt;br&gt;&lt;code&gt;enable-tftp&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;Establecemos una ruta donde va a albergar nuestro Debian:&lt;br&gt;&lt;code&gt;tftp-root=/srv/tftp&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;Creamos la carpeta en &amp;#x2F;srv&lt;br&gt;&lt;code&gt;sudo mkdir /srv/tftp&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;a continuación instalamos el wget y lo usamos en &amp;#x2F;srv&amp;#x2F;tftp&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;wget http://ftp.debian.org/debian/dists/bullseye/main/installer-amd64/current/images/netboot/netboot.tar.gz &lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;tar -zxf netboot.tar.gz&lt;/code&gt; (para descomprimir los archivos)&lt;br&gt;&lt;code&gt;rm netboot.tar.gz&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;srv/tftp/debian-installer/amd64/boot-screens/txt.cfg&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;En este fichero de configuración utilizamos los siguientes parámetros:&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;label install
+        menu label ^Install
+        kernel debian-installer/amd64/linux
+        append vga=788 initrd=debian-installer/amd64/initrd.gz --- quiet
+label unattended-gnome
+        menu label ^Instalacion Debian Desatendida Preseed
+        kernel debian-installer/amd64/linux
+        append vga=788 initrd=debian-installer/amd64/initrd.gz hostname=preseed domain=preseed preseed/url=192.168.100.5/preseed.cfg locale=en_US.UTF-8 console-setup/charmap=UTF-8 console-setup/ask_detect=false keyboard-configuration/xkb-keymap=us --
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;En este label he puesto la url del servidor apache que vamos a utilizar, para que descargue el preseed y lo inyecte en la instalación.&lt;/p&gt;
+&lt;p&gt;Instalamos apache2:&lt;br&gt;&lt;code&gt;sudo apt install apache2&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;luego copiamos el preseed, lo ponemos en &lt;code&gt;/var/www/html/&lt;/code&gt; junto al index.html, hacemos la página HTML que albergue el preseed y la ruta ya está establecida en el txt.cfg&lt;/p&gt;
+&lt;p&gt;Una vez hecho esto, para que nuestra máquina que se conecta a la tarjeta de red estática que hemos creado, necesitamos establecer unas reglas de nftables que nos ayudará a conseguir que la máquina que conecte con el servidor pxe salga al exterior para descargar las dependencias.&lt;/p&gt;
+&lt;p&gt;Para ello, debemos activar el bit de forwarding que se halla en &lt;code&gt;/etc/sysctl.conf&lt;/code&gt; y descomentamos &lt;code&gt;#net.ipv4.ip_forward=1&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;Instalamos y habilitamos nftables(Todo esto siendo root):&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;apt install nftables&lt;/code&gt;&lt;br&gt;&lt;code&gt;systemctl start nftables.service&lt;/code&gt;&lt;br&gt;&lt;code&gt;systemctl enable nftables.service&lt;/code&gt;&lt;br&gt;&lt;code&gt;nft add table nat&lt;/code&gt;&lt;br&gt;&lt;code&gt;nft list tables&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;ahora realizamos las reglas de nftables para conseguir que esas máquinas tengan internet:&lt;br&gt;&lt;code&gt;nft add chain nat postrouting &amp;#123; type nat hook postrouting priority 100 \; &amp;#125;&lt;/code&gt;&lt;br&gt;&lt;code&gt;nft add rule ip nat postrouting oifname &amp;quot;eth0&amp;quot; ip saddr 192.168.100.0/24 counter masquerade&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;Ahora guardamos los cambios: &lt;code&gt;nft list ruleset &amp;gt; /etc/nftables.conf&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;Ahora en virt-manager procedemos a crear y enlazar una máquina a una red aislada:&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;&amp;lt;network connections=&amp;quot;2&amp;quot;&amp;gt;
+  &amp;lt;name&amp;gt;red_muy_aislada&amp;lt;/name&amp;gt;
+  &amp;lt;uuid&amp;gt;b0083374-5cb6-4a8d-bd3c-32cf0d870b54&amp;lt;/uuid&amp;gt;
+  &amp;lt;bridge name=&amp;quot;virbr3&amp;quot; stp=&amp;quot;on&amp;quot; delay=&amp;quot;0&amp;quot;/&amp;gt;
+  &amp;lt;mac address=&amp;quot;52:54:00:e9:be:50&amp;quot;/&amp;gt;
+&amp;lt;/network&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt; debemos arrancarla por red como prioridad, luego de esto funcionará perfectamente nuestra instalación desatendida.&lt;/p&gt;
+ ]]></description>
+        </item>
+        <item>
+            <guid isPermalink="true">http://example.com/2022/09/30/preseed/</guid>
+            <title>Instalación automatizada basada en medio de almacenamiento extraíble.</title>
+            <link>http://example.com/2022/09/30/preseed/</link>
+            <pubDate>Fri, 30 Sep 2022 09:12:30 +0200</pubDate>
+            <description><![CDATA[ &lt;p&gt;He comenzado descargando el archivo iso para poder abrirlo y colocar el preseed en él, el comando que he utilizado es xorriso.&lt;br&gt;Tras esto he utilizado una plantilla de la web de debian&lt;/p&gt;
+&lt;p&gt;&lt;a href=&#34;https://www.debian.org/releases/buster/example-preseed.txt&#34;&gt;https://www.debian.org/releases/buster/example-preseed.txt&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;Tras esto he estado configurando preseed.cfg para poner la hora, el país y el teclado en español y resulta que estuve un tiempo estancado en esto porque hay que corroborar los cambios en el archivo isofiles&amp;#x2F;isolinux&amp;#x2F;txt.cfg&lt;br&gt;A su vez también debemos indicar la ruta donde vama a estar el preseed para que el sistema lo localice, en mi caso estará en la raíz de la ISO (CDROM)&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;label install
+        menu label ^Install
+        kernel /install.amd/vmlinuz
+        append vga=788 initrd=/install.amd/initrd.gz --- quiet
+label unattended-gnome
+ menu label ^Instalación Debian Desatendida Preseed Antonio
+ kernel /install.amd/gtk/vmlinuz
+ append vga=788 initrd=/install.amd/gtk/initrd.gz preseed/file=/cdrom/preseed.cfg locale=es_ES console-setup/ask_detect=false keyboard-configuration/xkb-keymap=es
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;Al tener que desensamblar y ensamblar constantemente el iso para poner el preseed actualizado llegó un momento en el que se hacía inviable seguir probando sin hacer un script con los pasos que se repetían, entonces lo realicé:&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;#!/usr/bin/env bash
+fichero=/home/antonio/Descargas/preseed-instalacion/preseed-debian-10.1.0-amd64-script-netinst.iso
+chmod u+w isofiles
+cp preseed.cfg ~/Descargas/preseed-instalacion/isofiles
+chmod u-w isofiles
+cd ~/Descargas/preseed-instalacion
+chmod a+w isofiles/isolinux/isolinux.bin
+if [ -f $fichero ]
+then
+        rm -f $fichero
+fi      
+genisoimage -r -J -b isolinux/isolinux.bin -c isolinux/boot.cat -no-emul-boot -boot-load-size 4 -boot-info-table -o preseed-debian-10&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;Tuve que meter la condición de que si el iso creado existía lo borrara porque al ejecutar genisoimage si el nombre ya existe provoca conflictos.&lt;/p&gt;
+&lt;p&gt;Entonces estuve probando, metiendo el usuario de la máquina con la contraseña sin encriptar, para ver el funcionamiento y que lo anterior configurado fuese por buen camino.&lt;/p&gt;
+&lt;p&gt;Estuve probando formas de encriptar la contraseña, la plantilla me recomendaba que usara  &lt;strong&gt;Crypt 3&lt;/strong&gt; pero es un método muy vulnerable, así que mirando la documentación vi que podía meter un hash &lt;strong&gt;md5&lt;/strong&gt;.&lt;/p&gt;
+&lt;p&gt;Entonces empecé a encriptar la contraseña, para ello utilicé &lt;code&gt;mkpasswd -m sha-512&lt;/code&gt; el cual al ingresar la contraseña me la devuelve encriptada, activo la opción de &lt;code&gt;d-i passwd/user-password-crypted password&lt;/code&gt; junto con la contraseña encriptada&lt;/p&gt;
+&lt;p&gt;Ya entonces, con la localización y el teclado en español, la cuenta del usuario con su contraseña encriptada decido comenzar a realizar las particiones de lvm.&lt;br&gt;Tuve muchísimos errores de sintaxis pero gracias al script podía probar de manera más rápida las diferentes combinaciones de particionado y ajustando la sintaxis conseguí realizarlo:&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;/images/ASO-PRACTICA1.png&#34; alt=&#34;Descripción de la imagen&#34;&gt;&lt;/p&gt;
+ ]]></description>
+        </item>
+    </channel>
+</rss>

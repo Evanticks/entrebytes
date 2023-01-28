@@ -1,0 +1,201 @@
+<?xml version="1.0"?>
+<rss version="2.0">
+    <channel>
+        <title>Hexo • Posts by &#34;seguridad&#34; tag</title>
+        <link>http://example.com</link>
+        <description></description>
+        <language>en</language>
+        <pubDate>Thu, 26 Jan 2023 19:57:47 +0100</pubDate>
+        <lastBuildDate>Thu, 26 Jan 2023 19:57:47 +0100</lastBuildDate>
+        <category>Servicios de Red e Internet</category>
+        <category>Sistemas Operativos</category>
+        <category>Seguridad</category>
+        <item>
+            <guid isPermalink="true">http://example.com/2023/01/26/vpn-wireguard/</guid>
+            <title>VPN Wireguard</title>
+            <link>http://example.com/2023/01/26/vpn-wireguard/</link>
+            <category>Seguridad</category>
+            <pubDate>Thu, 26 Jan 2023 19:57:47 +0100</pubDate>
+            <description><![CDATA[ &lt;p&gt;&lt;img src=&#34;/images/logo-wireguard.png&#34; alt=&#34;wireguard-site-1.png&#34;&gt;&lt;/p&gt;
+&lt;h1 id=&#34;site-to-site&#34;&gt;&lt;a class=&#34;markdownIt-Anchor&#34; href=&#34;#site-to-site&#34;&gt;#&lt;/a&gt; Site to Site&lt;/h1&gt;
+&lt;h2 id=&#34;linux&#34;&gt;&lt;a class=&#34;markdownIt-Anchor&#34; href=&#34;#linux&#34;&gt;#&lt;/a&gt; Linux&lt;/h2&gt;
+&lt;p&gt;Primero vamos a cada cliente y vamos a establecer la ruta por defecto&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;Cliente 1:
+    sudo ip route del default
+    sudo ip route add default via 192.168.200.1
+&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;Cliente 2:
+
+    sudo ip route del default
+    sudo ip route add default via 192.168.100.1
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;Ahora nos conectarems a &lt;strong&gt;cada servidor&lt;/strong&gt; de manera que en cada uno realizaremos los siguientes comandos:&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;Instalamos wireguard
+    sudo apt update
+    sudo apt install wireguard
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;Creamos la clave privada y pública&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;wg genkey | sudo tee /etc/wireguard/server_private.key | wg pubkey | sudo tee /etc/wireguard/server_public.key&lt;/code&gt;&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;cat /etc/wireguard/server_private.key
+cat /etc/wireguard/server_public.key
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;El resultado de los comandos será cada clave pública y privada de los servidores&lt;/p&gt;
+&lt;p&gt;Creo el fichero de configuración en el que la interfaz se llamará wg0.conf&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;sudo nano /etc/wireguard/wg0.conf
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;Después de esto en vpn1 quedará el archivo de configuración de la siguiente manera:&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;[Interface]
+Address = 10.99.99.1
+PrivateKey = UKn7oartqeJjRPk8jUtACSTYn/e23wszOBxT/Ymo1Uk=
+ListenPort = 51820
+
+[Peer]
+PublicKey = PWrfuUd1UODnjTPuFCJfy/eixRTEsCq/KioI74/vDFo=
+AllowedIPs = 0.0.0.0/0
+Endpoint = 10.0.0.1:51820
+PersistentKeepAlive = 25
+
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;El siguiente archivo de configuración es el de vpn2:&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;[Interface]
+Address = 10.99.99.2
+PrivateKey = MCL13K+q/43eyF8qLtBxz9cNhvcFxQ2s98LOiseZy3w=
+ListenPort = 51820
+
+[Peer]
+PublicKey = 2az5T5rW/7x1Z/YLRfX7saNteaOsoupFh07Z6VkeUjI=
+AllowedIPs = 0.0.0.0/0
+Endpoint = 10.0.0.10:51820
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;Ahora en &lt;strong&gt;cada servidor&lt;/strong&gt; emplearemos&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;wg-quick up wg0&lt;/code&gt;  para activar el servicio&lt;br&gt;
+ &lt;code&gt;wg-quick down wg0&lt;/code&gt;  para desactivar el servicio&lt;br&gt;
+ &lt;code&gt;wg&lt;/code&gt;  para poder ver el estado del servicio&lt;/p&gt;
+&lt;p&gt;En los servidores hay que intercambiar las respectivas claves públicas e ingresarlo en PublicKey.&lt;br&gt;
+Address es la ip del túnel que se va a asignar en cada extremo del servidor.&lt;br&gt;
+AllowedIPs es las ip permitidas hacia el servidor&lt;br&gt;
+Endpoint es la ip pública del servidor y el puerto que se ha configurado en el servidor opuesto.&lt;br&gt;
+PersistentKeepAlive es el tiempo en el que se realizan las comprobaciones de conexión.&lt;/p&gt;
+&lt;p&gt;Ahora entraremos a cada cliente y realizaremos la comprobación de que pueden conectarse:&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;/images/wireguard-site-1.png&#34; alt=&#34;wireguard-site-1.png&#34;&gt;&lt;/p&gt;
+&lt;h2 id=&#34;cliente-windows&#34;&gt;&lt;a class=&#34;markdownIt-Anchor&#34; href=&#34;#cliente-windows&#34;&gt;#&lt;/a&gt; Cliente Windows&lt;/h2&gt;
+&lt;p&gt;Ahora vamos a proceder a conectar un segundo cliente windows:&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;/images/wireguard-site-2.png&#34; alt=&#34;wireguard-site-2.png&#34;&gt;&lt;/p&gt;
+&lt;p&gt;Ahora cambiaremos la interfaz para establecer una ip estática:&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;/images/wireguard-site-3.png&#34; alt=&#34;wireguard-site-2.png&#34;&gt;&lt;/p&gt;
+&lt;p&gt;Una vez hecho esto probamos a hacer un ping para ver que podemos comunicarnos en remoto a través de la VPN&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;/images/wireguard-site-4.png&#34; alt=&#34;wireguard-site-2.png&#34;&gt;&lt;/p&gt;
+&lt;h1 id=&#34;point-to-site&#34;&gt;&lt;a class=&#34;markdownIt-Anchor&#34; href=&#34;#point-to-site&#34;&gt;#&lt;/a&gt; Point to Site&lt;/h1&gt;
+&lt;p&gt;La misma configuración que en el site to site, solo que no activaremos el bit de forwarding en el cliente final ya que este mismo no hará de router.&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;[Interface]
+Address = 10.99.99.1
+PrivateKey = 4GLQzZT6G/Oq69aAitajxl7ZRtzuV1cFrsI0j4Cqjk4=
+ListenPort = 51820
+
+[Peer]
+Publickey = fKWBm53DKrAAukk6nssSZ0DuVy9jEBIRKbqOS22sdg8=
+AllowedIPs = 0.0.0.0/0
+PersistentKeepAlive = 25
+Endpoint = 192.188.188.20:51820
+
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;img src=&#34;/images/vpn-cliente-C-lin.png&#34; alt=&#34;wireguard-site-1.png&#34;&gt;&lt;/p&gt;
+&lt;p&gt;Luego conectaremos la interfaz en windows como explicamos anteriormente y activaremos la configuración de la VPN como hemos hecho en linux, solo que esta vez su ip de la ruta será&lt;br&gt;
+10.99.99.4/32&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;/images/vpn-cliente-C-win2.png&#34; alt=&#34;wireguard-site-1.png&#34;&gt;&lt;/p&gt;
+&lt;p&gt;Finalmente copiamos la configuración en el servidor con la clave pública de la vpn de windows y de esta manera reiniciando el servicio con wg-quick down wg0 y wg-quick up wg0 ya tendremos la vpn funcionando.&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;[Peer]
+Publickey = I/Gj50Ue+qmv+a4Q+C1VcJ4VptBVnU3QfDgo//vq+Fw=
+AllowedIPs = 0.0.0.0/0
+PersistentKeepAlive = 25
+Endpoint = 192.188.188.21:51820
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;img src=&#34;/images/vpn-cliente-C-win.png&#34; alt=&#34;wireguard-site-1.png&#34;&gt;&lt;/p&gt;
+ ]]></description>
+        </item>
+        <item>
+            <guid isPermalink="true">http://example.com/2023/01/24/vpn/</guid>
+            <title>Cliente-Servidor Openvpn</title>
+            <link>http://example.com/2023/01/24/vpn/</link>
+            <category>Seguridad</category>
+            <pubDate>Tue, 24 Jan 2023 11:06:01 +0100</pubDate>
+            <description><![CDATA[ &lt;p&gt;&lt;img src=&#34;/images/vpn-logo.png&#34; alt=&#34;Descripción de la imagen&#34;&gt;&lt;/p&gt;
+&lt;h1 id=&#34;cliente-servidor-openvpn&#34;&gt;&lt;a class=&#34;markdownIt-Anchor&#34; href=&#34;#cliente-servidor-openvpn&#34;&gt;#&lt;/a&gt; Cliente-Servidor Openvpn&lt;/h1&gt;
+&lt;h2 id=&#34;servidor&#34;&gt;&lt;a class=&#34;markdownIt-Anchor&#34; href=&#34;#servidor&#34;&gt;#&lt;/a&gt; Servidor&lt;/h2&gt;
+&lt;p&gt;Tendremos un escenario en vagrant en el cual constará de 3 máquinas, un cliente externo, el servidor vpn&lt;/p&gt;
+&lt;p&gt;Entramos en el servidor vpn y haremos apt update, y después instalaremos openvpn que servirá tanto para el cliente como para el servidor.&lt;/p&gt;
+&lt;p&gt;Activamos el bit de forwarding en  &lt;code&gt;/etc/sysctl.conf&lt;/code&gt;   net.ipv4.ip_forward=1&lt;br&gt;
+Ejecutamos  &lt;code&gt;sudo sysctl -p&lt;/code&gt;  para que lea el archivo sysctl.conf&lt;/p&gt;
+&lt;p&gt;sudo cp -r /usr/share/easy-rsa /etc/openvpn&lt;/p&gt;
+&lt;p&gt;cd /etc/openvpn/easy-rsa&lt;/p&gt;
+&lt;p&gt;Activamos el servicio de infraestructura pública:&lt;/p&gt;
+&lt;p&gt;sudo ./easyrsa init-pki&lt;/p&gt;
+&lt;p&gt;Tras esto generamos la entidad certificadora con su respectiva clave privada gracias al binario easyrsa.&lt;/p&gt;
+&lt;p&gt;./easyrsa build-ca&lt;/p&gt;
+&lt;p&gt;Ahora vamos a montar el servidor de certificaciones:&lt;/p&gt;
+&lt;p&gt;./easyrsa build-server-full server nopass&lt;/p&gt;
+&lt;p&gt;Generamos parámetros de Diffie-Helman, el objetivo del algoritmo de cifrado Diffie-Hellman es lograr el intercambio de una clave secreta por medio de un canal inseguro como es internet. Para que este algoritmo funcione, los datos informáticos deben traducirse a números, lo cual es posible por medio de sistemas como el código ASCII, combinado con otros.&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;sudo ./easyrsa gen-dh&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;Generamos el par de claves del cliente:&lt;br&gt;
+./easyrsa build-client-full clientevpn nopass&lt;/p&gt;
+&lt;p&gt;Ahora pasamos las claves al servidor cliente&lt;br&gt;
+sudo cp -rp /etc/openvpn/easy-rsa/pki/{ca.crt,issued/clientevpn.crt,private/clientevpn.key} /home/vagrant/&lt;br&gt;
+cd /home/vagrant&lt;br&gt;
+sudo chown vagrant:vagrant {ca.crt,clientevpn.crt,clientevpn.key}&lt;br&gt;
+scp {ca.crt,clientevpn.crt,clientevpn.key} vagrant@vpn-cli:&lt;/p&gt;
+&lt;p&gt;Ahora configuraremos los parámetros del servidor y sus saltos:&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;/etc/openvpn/server/servidor.conf&lt;/code&gt;&lt;/p&gt;
+&lt;figure class=&#34;highlight ruby&#34;&gt;&lt;figcaption data-lang=&#34;ruby&#34;&gt;&lt;/figcaption&gt;&lt;table&gt;&lt;tr&gt;&lt;td data-num=&#34;1&#34;&gt;&lt;/td&gt;&lt;td&gt;&lt;pre&gt;port &lt;span class=&#34;token number&#34;&gt;1194&lt;/span&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td data-num=&#34;2&#34;&gt;&lt;/td&gt;&lt;td&gt;&lt;pre&gt;proto udp&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td data-num=&#34;3&#34;&gt;&lt;/td&gt;&lt;td&gt;&lt;pre&gt;dev tun&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td data-num=&#34;4&#34;&gt;&lt;/td&gt;&lt;td&gt;&lt;pre&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td data-num=&#34;5&#34;&gt;&lt;/td&gt;&lt;td&gt;&lt;pre&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td data-num=&#34;6&#34;&gt;&lt;/td&gt;&lt;td&gt;&lt;pre&gt;ca &lt;span class=&#34;token operator&#34;&gt;/&lt;/span&gt;etc&lt;span class=&#34;token operator&#34;&gt;/&lt;/span&gt;openvpn&lt;span class=&#34;token operator&#34;&gt;/&lt;/span&gt;easy&lt;span class=&#34;token operator&#34;&gt;-&lt;/span&gt;rsa&lt;span class=&#34;token operator&#34;&gt;/&lt;/span&gt;pki&lt;span class=&#34;token operator&#34;&gt;/&lt;/span&gt;ca&lt;span class=&#34;token punctuation&#34;&gt;.&lt;/span&gt;crt&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td data-num=&#34;7&#34;&gt;&lt;/td&gt;&lt;td&gt;&lt;pre&gt;cert &lt;span class=&#34;token operator&#34;&gt;/&lt;/span&gt;etc&lt;span class=&#34;token operator&#34;&gt;/&lt;/span&gt;openvpn&lt;span class=&#34;token operator&#34;&gt;/&lt;/span&gt;easy&lt;span class=&#34;token operator&#34;&gt;-&lt;/span&gt;rsa&lt;span class=&#34;token operator&#34;&gt;/&lt;/span&gt;pki&lt;span class=&#34;token operator&#34;&gt;/&lt;/span&gt;issued&lt;span class=&#34;token operator&#34;&gt;/&lt;/span&gt;server&lt;span class=&#34;token punctuation&#34;&gt;.&lt;/span&gt;crt&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td data-num=&#34;8&#34;&gt;&lt;/td&gt;&lt;td&gt;&lt;pre&gt;key &lt;span class=&#34;token operator&#34;&gt;/&lt;/span&gt;etc&lt;span class=&#34;token operator&#34;&gt;/&lt;/span&gt;openvpn&lt;span class=&#34;token operator&#34;&gt;/&lt;/span&gt;easy&lt;span class=&#34;token operator&#34;&gt;-&lt;/span&gt;rsa&lt;span class=&#34;token operator&#34;&gt;/&lt;/span&gt;pki&lt;span class=&#34;token operator&#34;&gt;/&lt;/span&gt;&lt;span class=&#34;token keyword&#34;&gt;private&lt;/span&gt;&lt;span class=&#34;token operator&#34;&gt;/&lt;/span&gt;server&lt;span class=&#34;token punctuation&#34;&gt;.&lt;/span&gt;key&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td data-num=&#34;9&#34;&gt;&lt;/td&gt;&lt;td&gt;&lt;pre&gt;dh &lt;span class=&#34;token operator&#34;&gt;/&lt;/span&gt;etc&lt;span class=&#34;token operator&#34;&gt;/&lt;/span&gt;openvpn&lt;span class=&#34;token operator&#34;&gt;/&lt;/span&gt;easy&lt;span class=&#34;token operator&#34;&gt;-&lt;/span&gt;rsa&lt;span class=&#34;token operator&#34;&gt;/&lt;/span&gt;pki&lt;span class=&#34;token operator&#34;&gt;/&lt;/span&gt;dh&lt;span class=&#34;token punctuation&#34;&gt;.&lt;/span&gt;pem&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td data-num=&#34;10&#34;&gt;&lt;/td&gt;&lt;td&gt;&lt;pre&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td data-num=&#34;11&#34;&gt;&lt;/td&gt;&lt;td&gt;&lt;pre&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td data-num=&#34;12&#34;&gt;&lt;/td&gt;&lt;td&gt;&lt;pre&gt;topology subnet&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td data-num=&#34;13&#34;&gt;&lt;/td&gt;&lt;td&gt;&lt;pre&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td data-num=&#34;14&#34;&gt;&lt;/td&gt;&lt;td&gt;&lt;pre&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td data-num=&#34;15&#34;&gt;&lt;/td&gt;&lt;td&gt;&lt;pre&gt;server &lt;span class=&#34;token number&#34;&gt;9.8&lt;/span&gt;&lt;span class=&#34;token number&#34;&gt;.7&lt;/span&gt;&lt;span class=&#34;token number&#34;&gt;.0&lt;/span&gt; &lt;span class=&#34;token number&#34;&gt;255.255&lt;/span&gt;&lt;span class=&#34;token number&#34;&gt;.255&lt;/span&gt;&lt;span class=&#34;token number&#34;&gt;.0&lt;/span&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td data-num=&#34;16&#34;&gt;&lt;/td&gt;&lt;td&gt;&lt;pre&gt;ifconfig&lt;span class=&#34;token operator&#34;&gt;-&lt;/span&gt;pool&lt;span class=&#34;token operator&#34;&gt;-&lt;/span&gt;persist &lt;span class=&#34;token operator&#34;&gt;/&lt;/span&gt;var&lt;span class=&#34;token operator&#34;&gt;/&lt;/span&gt;log&lt;span class=&#34;token operator&#34;&gt;/&lt;/span&gt;openvpn&lt;span class=&#34;token operator&#34;&gt;/&lt;/span&gt;ipp&lt;span class=&#34;token punctuation&#34;&gt;.&lt;/span&gt;txt&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td data-num=&#34;17&#34;&gt;&lt;/td&gt;&lt;td&gt;&lt;pre&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td data-num=&#34;18&#34;&gt;&lt;/td&gt;&lt;td&gt;&lt;pre&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td data-num=&#34;19&#34;&gt;&lt;/td&gt;&lt;td&gt;&lt;pre&gt;push &lt;span class=&#34;token string-literal&#34;&gt;&lt;span class=&#34;token string&#34;&gt;&#34;route 192.168.0.0 255.255.255.0&#34;&lt;/span&gt;&lt;/span&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td data-num=&#34;20&#34;&gt;&lt;/td&gt;&lt;td&gt;&lt;pre&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td data-num=&#34;21&#34;&gt;&lt;/td&gt;&lt;td&gt;&lt;pre&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td data-num=&#34;22&#34;&gt;&lt;/td&gt;&lt;td&gt;&lt;pre&gt;keepalive &lt;span class=&#34;token number&#34;&gt;10&lt;/span&gt; &lt;span class=&#34;token number&#34;&gt;120&lt;/span&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td data-num=&#34;23&#34;&gt;&lt;/td&gt;&lt;td&gt;&lt;pre&gt;cipher &lt;span class=&#34;token constant&#34;&gt;AES&lt;/span&gt;&lt;span class=&#34;token operator&#34;&gt;-&lt;/span&gt;&lt;span class=&#34;token number&#34;&gt;256&lt;/span&gt;&lt;span class=&#34;token operator&#34;&gt;-&lt;/span&gt;&lt;span class=&#34;token constant&#34;&gt;CBC&lt;/span&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td data-num=&#34;24&#34;&gt;&lt;/td&gt;&lt;td&gt;&lt;pre&gt;persist&lt;span class=&#34;token operator&#34;&gt;-&lt;/span&gt;key&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td data-num=&#34;25&#34;&gt;&lt;/td&gt;&lt;td&gt;&lt;pre&gt;persist&lt;span class=&#34;token operator&#34;&gt;-&lt;/span&gt;tun&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td data-num=&#34;26&#34;&gt;&lt;/td&gt;&lt;td&gt;&lt;pre&gt;status &lt;span class=&#34;token operator&#34;&gt;/&lt;/span&gt;var&lt;span class=&#34;token operator&#34;&gt;/&lt;/span&gt;log&lt;span class=&#34;token operator&#34;&gt;/&lt;/span&gt;openvpn&lt;span class=&#34;token operator&#34;&gt;/&lt;/span&gt;openvpn&lt;span class=&#34;token operator&#34;&gt;-&lt;/span&gt;status&lt;span class=&#34;token punctuation&#34;&gt;.&lt;/span&gt;log&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td data-num=&#34;27&#34;&gt;&lt;/td&gt;&lt;td&gt;&lt;pre&gt;verb &lt;span class=&#34;token number&#34;&gt;3&lt;/span&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td data-num=&#34;28&#34;&gt;&lt;/td&gt;&lt;td&gt;&lt;pre&gt;explicit&lt;span class=&#34;token operator&#34;&gt;-&lt;/span&gt;exit&lt;span class=&#34;token operator&#34;&gt;-&lt;/span&gt;notify &lt;span class=&#34;token number&#34;&gt;1&lt;/span&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;&lt;/figure&gt;&lt;p&gt;sudo systemctl enable --now openvpn-server@servidor&lt;/p&gt;
+&lt;h2 id=&#34;cliente&#34;&gt;&lt;a class=&#34;markdownIt-Anchor&#34; href=&#34;#cliente&#34;&gt;#&lt;/a&gt; Cliente&lt;/h2&gt;
+&lt;p&gt;sudo apt update&lt;br&gt;
+sudo apt install openvpn&lt;/p&gt;
+&lt;p&gt;sudo mv {ca.crt,clientevpn.crt,clientevpn.key} /etc/openvpn/client&lt;br&gt;
+sudo chown root: /etc/openvpn/client/*&lt;/p&gt;
+&lt;p&gt;Ahora vamos a crear el fichero /etc/openvpn/client/cliente.conf&lt;/p&gt;
+&lt;figure class=&#34;highlight ruby&#34;&gt;&lt;figcaption data-lang=&#34;ruby&#34;&gt;&lt;/figcaption&gt;&lt;table&gt;&lt;tr&gt;&lt;td data-num=&#34;1&#34;&gt;&lt;/td&gt;&lt;td&gt;&lt;pre&gt;client&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td data-num=&#34;2&#34;&gt;&lt;/td&gt;&lt;td&gt;&lt;pre&gt;dev tun&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td data-num=&#34;3&#34;&gt;&lt;/td&gt;&lt;td&gt;&lt;pre&gt;proto udp&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td data-num=&#34;4&#34;&gt;&lt;/td&gt;&lt;td&gt;&lt;pre&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td data-num=&#34;5&#34;&gt;&lt;/td&gt;&lt;td&gt;&lt;pre&gt;remote &lt;span class=&#34;token number&#34;&gt;192.22&lt;/span&gt;&lt;span class=&#34;token number&#34;&gt;.23&lt;/span&gt;&lt;span class=&#34;token number&#34;&gt;.1&lt;/span&gt; &lt;span class=&#34;token number&#34;&gt;1194&lt;/span&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td data-num=&#34;6&#34;&gt;&lt;/td&gt;&lt;td&gt;&lt;pre&gt;resolv&lt;span class=&#34;token operator&#34;&gt;-&lt;/span&gt;&lt;span class=&#34;token keyword&#34;&gt;retry&lt;/span&gt; infinite&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td data-num=&#34;7&#34;&gt;&lt;/td&gt;&lt;td&gt;&lt;pre&gt;nobind&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td data-num=&#34;8&#34;&gt;&lt;/td&gt;&lt;td&gt;&lt;pre&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td data-num=&#34;9&#34;&gt;&lt;/td&gt;&lt;td&gt;&lt;pre&gt;persist&lt;span class=&#34;token operator&#34;&gt;-&lt;/span&gt;key&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td data-num=&#34;10&#34;&gt;&lt;/td&gt;&lt;td&gt;&lt;pre&gt;persist&lt;span class=&#34;token operator&#34;&gt;-&lt;/span&gt;tun&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td data-num=&#34;11&#34;&gt;&lt;/td&gt;&lt;td&gt;&lt;pre&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td data-num=&#34;12&#34;&gt;&lt;/td&gt;&lt;td&gt;&lt;pre&gt;ca &lt;span class=&#34;token operator&#34;&gt;/&lt;/span&gt;etc&lt;span class=&#34;token operator&#34;&gt;/&lt;/span&gt;openvpn&lt;span class=&#34;token operator&#34;&gt;/&lt;/span&gt;client&lt;span class=&#34;token operator&#34;&gt;/&lt;/span&gt;ca&lt;span class=&#34;token punctuation&#34;&gt;.&lt;/span&gt;crt&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td data-num=&#34;13&#34;&gt;&lt;/td&gt;&lt;td&gt;&lt;pre&gt;cert &lt;span class=&#34;token operator&#34;&gt;/&lt;/span&gt;etc&lt;span class=&#34;token operator&#34;&gt;/&lt;/span&gt;openvpn&lt;span class=&#34;token operator&#34;&gt;/&lt;/span&gt;client&lt;span class=&#34;token operator&#34;&gt;/&lt;/span&gt;clientevpn&lt;span class=&#34;token punctuation&#34;&gt;.&lt;/span&gt;crt&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td data-num=&#34;14&#34;&gt;&lt;/td&gt;&lt;td&gt;&lt;pre&gt;key &lt;span class=&#34;token operator&#34;&gt;/&lt;/span&gt;etc&lt;span class=&#34;token operator&#34;&gt;/&lt;/span&gt;openvpn&lt;span class=&#34;token operator&#34;&gt;/&lt;/span&gt;client&lt;span class=&#34;token operator&#34;&gt;/&lt;/span&gt;clientevpn&lt;span class=&#34;token punctuation&#34;&gt;.&lt;/span&gt;key&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td data-num=&#34;15&#34;&gt;&lt;/td&gt;&lt;td&gt;&lt;pre&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td data-num=&#34;16&#34;&gt;&lt;/td&gt;&lt;td&gt;&lt;pre&gt;remote&lt;span class=&#34;token operator&#34;&gt;-&lt;/span&gt;cert&lt;span class=&#34;token operator&#34;&gt;-&lt;/span&gt;tls server&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td data-num=&#34;17&#34;&gt;&lt;/td&gt;&lt;td&gt;&lt;pre&gt;cipher &lt;span class=&#34;token constant&#34;&gt;AES&lt;/span&gt;&lt;span class=&#34;token operator&#34;&gt;-&lt;/span&gt;&lt;span class=&#34;token number&#34;&gt;256&lt;/span&gt;&lt;span class=&#34;token operator&#34;&gt;-&lt;/span&gt;&lt;span class=&#34;token constant&#34;&gt;CBC&lt;/span&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td data-num=&#34;18&#34;&gt;&lt;/td&gt;&lt;td&gt;&lt;pre&gt;verb &lt;span class=&#34;token number&#34;&gt;3&lt;/span&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;&lt;/figure&gt;&lt;p&gt;E iniciamos la el servicio de la configuración:&lt;/p&gt;
+&lt;p&gt;sudo systemctl enable --now openvpn-client@cliente&lt;/p&gt;
+&lt;h2 id=&#34;máquina-interna&#34;&gt;&lt;a class=&#34;markdownIt-Anchor&#34; href=&#34;#máquina-interna&#34;&gt;#&lt;/a&gt; Máquina interna&lt;/h2&gt;
+&lt;p&gt;Quitamos la ip de la ruta por defecto que viene en vagrant:&lt;/p&gt;
+&lt;p&gt;sudo ip route del default&lt;/p&gt;
+&lt;p&gt;Añadimos la ruta que creamos hacia la vpn:&lt;/p&gt;
+&lt;p&gt;sudo ip route add default via 192.168.0.1&lt;/p&gt;
+&lt;p&gt;comprobaciones&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;/images/vpn-acceso-remoto-ssh-openvpn.png&#34; alt=&#34;Descripción de la imagen&#34;&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;/images/traceroute-openvpn.png&#34; alt=&#34;Descripción de la imagen&#34;&gt;&lt;/p&gt;
+&lt;h1 id=&#34;site-to-site-openvpn&#34;&gt;&lt;a class=&#34;markdownIt-Anchor&#34; href=&#34;#site-to-site-openvpn&#34;&gt;#&lt;/a&gt; Site-To-Site Openvpn&lt;/h1&gt;
+&lt;p&gt;&lt;img src=&#34;/images/vpn-site-esquema.png&#34; alt=&#34;Descripción de la imagen&#34;&gt;&lt;/p&gt;
+&lt;h2 id=&#34;servidor-2&#34;&gt;&lt;a class=&#34;markdownIt-Anchor&#34; href=&#34;#servidor-2&#34;&gt;#&lt;/a&gt; Servidor&lt;/h2&gt;
+&lt;p&gt;Entramos en el servidor vpn y haremos apt update, y después instalaremos openvpn que servirá tanto para el cliente como para el servidor.&lt;/p&gt;
+&lt;p&gt;Activamos el bit de forwarding en  &lt;code&gt;/etc/sysctl.conf&lt;/code&gt;   net.ipv4.ip_forward=1&lt;br&gt;
+Ejecutamos  &lt;code&gt;sudo sysctl -p&lt;/code&gt;  para que lea el archivo sysctl.conf&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;sudo cp -r /usr/share/easy-rsa /etc/openvpn&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;cd /etc/openvpn/easy-rsa&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;Activamos el servicio de infraestructura pública:&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;sudo ./easyrsa init-pki&lt;/code&gt; &lt;br&gt;
+Tras esto generamos la entidad certificadora con su respectiva clave privada gracias al binario easyrsa.&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;./easyrsa build-ca&lt;/code&gt; &lt;br&gt;
+Ahora vamos a montar el servidor de certificaciones:&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;./easyrsa build-server-full server nopass&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;sudo ./easyrsa gen-dh&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;Generamos el par de claves del cliente:&lt;br&gt;
+ &lt;code&gt;./easyrsa build-client-full clientevpn nopass&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;Ahora pasamos las claves al servidor cliente&lt;/p&gt;
+&lt;figure class=&#34;highlight ruby&#34;&gt;&lt;figcaption data-lang=&#34;ruby&#34;&gt;&lt;/figcaption&gt;&lt;table&gt;&lt;tr&gt;&lt;td data-num=&#34;1&#34;&gt;&lt;/td&gt;&lt;td&gt;&lt;pre&gt;sudo cp &lt;span class=&#34;token operator&#34;&gt;-&lt;/span&gt;rp &lt;span class=&#34;token operator&#34;&gt;/&lt;/span&gt;etc&lt;span class=&#34;token operator&#34;&gt;/&lt;/span&gt;openvpn&lt;span class=&#34;token operator&#34;&gt;/&lt;/span&gt;easy&lt;span class=&#34;token operator&#34;&gt;-&lt;/span&gt;rsa&lt;span class=&#34;token operator&#34;&gt;/&lt;/span&gt;pki&lt;span class=&#34;token operator&#34;&gt;/&lt;/span&gt;&lt;span class=&#34;token punctuation&#34;&gt;&amp;#123;&lt;/span&gt;ca&lt;span class=&#34;token punctuation&#34;&gt;.&lt;/span&gt;crt&lt;span class=&#34;token punctuation&#34;&gt;,&lt;/span&gt;issued&lt;span class=&#34;token operator&#34;&gt;/&lt;/span&gt;clientevpn&lt;span class=&#34;token punctuation&#34;&gt;.&lt;/span&gt;crt&lt;span class=&#34;token punctuation&#34;&gt;,&lt;/span&gt;&lt;span class=&#34;token keyword&#34;&gt;private&lt;/span&gt;&lt;span class=&#34;token operator&#34;&gt;/&lt;/span&gt;clientevpn&lt;span class=&#34;token punctuation&#34;&gt;.&lt;/span&gt;key&lt;span class=&#34;token punctuation&#34;&gt;&amp;#125;&lt;/span&gt; &lt;span class=&#34;token operator&#34;&gt;/&lt;/span&gt;home&lt;span class=&#34;token regex-literal&#34;&gt;&lt;span class=&#34;token regex&#34;&gt;/vagrant/&lt;/span&gt;&lt;/span&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td data-num=&#34;2&#34;&gt;&lt;/td&gt;&lt;td&gt;&lt;pre&gt;cd &lt;span class=&#34;token operator&#34;&gt;/&lt;/span&gt;home&lt;span class=&#34;token operator&#34;&gt;/&lt;/span&gt;vagrant&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td data-num=&#34;3&#34;&gt;&lt;/td&gt;&lt;td&gt;&lt;pre&gt;sudo chown vagrant&lt;span class=&#34;token symbol&#34;&gt;:vagrant&lt;/span&gt; &lt;span class=&#34;token punctuation&#34;&gt;&amp;#123;&lt;/span&gt;ca&lt;span class=&#34;token punctuation&#34;&gt;.&lt;/span&gt;crt&lt;span class=&#34;token punctuation&#34;&gt;,&lt;/span&gt;clientevpn&lt;span class=&#34;token punctuation&#34;&gt;.&lt;/span&gt;crt&lt;span class=&#34;token punctuation&#34;&gt;,&lt;/span&gt;clientevpn&lt;span class=&#34;token punctuation&#34;&gt;.&lt;/span&gt;key&lt;span class=&#34;token punctuation&#34;&gt;&amp;#125;&lt;/span&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td data-num=&#34;4&#34;&gt;&lt;/td&gt;&lt;td&gt;&lt;pre&gt;scp &lt;span class=&#34;token punctuation&#34;&gt;&amp;#123;&lt;/span&gt;ca&lt;span class=&#34;token punctuation&#34;&gt;.&lt;/span&gt;crt&lt;span class=&#34;token punctuation&#34;&gt;,&lt;/span&gt;clientevpn&lt;span class=&#34;token punctuation&#34;&gt;.&lt;/span&gt;crt&lt;span class=&#34;token punctuation&#34;&gt;,&lt;/span&gt;clientevpn&lt;span class=&#34;token punctuation&#34;&gt;.&lt;/span&gt;key&lt;span class=&#34;token punctuation&#34;&gt;&amp;#125;&lt;/span&gt; vagrant&lt;span class=&#34;token variable&#34;&gt;@vpn&lt;/span&gt;&lt;span class=&#34;token operator&#34;&gt;-&lt;/span&gt;cli&lt;span class=&#34;token operator&#34;&gt;:&lt;/span&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;&lt;/figure&gt;&lt;p&gt;A partir de aquí la configuración varía respecto a la parte de cliente-servidor:&lt;/p&gt;
+&lt;figure class=&#34;highlight ruby&#34;&gt;&lt;figcaption data-lang=&#34;ruby&#34;&gt;&lt;/figcaption&gt;&lt;table&gt;&lt;tr&gt;&lt;td data-num=&#34;1&#34;&gt;&lt;/td&gt;&lt;td&gt;&lt;pre&gt;dev tun&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td data-num=&#34;2&#34;&gt;&lt;/td&gt;&lt;td&gt;&lt;pre&gt;ifconfig &lt;span class=&#34;token number&#34;&gt;10.99&lt;/span&gt;&lt;span class=&#34;token number&#34;&gt;.99&lt;/span&gt;&lt;span class=&#34;token number&#34;&gt;.1&lt;/span&gt; &lt;span class=&#34;token number&#34;&gt;10.99&lt;/span&gt;&lt;span class=&#34;token number&#34;&gt;.99&lt;/span&gt;&lt;span class=&#34;token number&#34;&gt;.2&lt;/span&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td data-num=&#34;3&#34;&gt;&lt;/td&gt;&lt;td&gt;&lt;pre&gt;route &lt;span class=&#34;token number&#34;&gt;192.168&lt;/span&gt;&lt;span class=&#34;token number&#34;&gt;.100&lt;/span&gt;&lt;span class=&#34;token number&#34;&gt;.0&lt;/span&gt; &lt;span class=&#34;token number&#34;&gt;255.255&lt;/span&gt;&lt;span class=&#34;token number&#34;&gt;.255&lt;/span&gt;&lt;span class=&#34;token number&#34;&gt;.0&lt;/span&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td data-num=&#34;4&#34;&gt;&lt;/td&gt;&lt;td&gt;&lt;pre&gt;tls&lt;span class=&#34;token operator&#34;&gt;-&lt;/span&gt;server&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td data-num=&#34;5&#34;&gt;&lt;/td&gt;&lt;td&gt;&lt;pre&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td data-num=&#34;6&#34;&gt;&lt;/td&gt;&lt;td&gt;&lt;pre&gt;dh &lt;span class=&#34;token operator&#34;&gt;/&lt;/span&gt;etc&lt;span class=&#34;token operator&#34;&gt;/&lt;/span&gt;openvpn&lt;span class=&#34;token operator&#34;&gt;/&lt;/span&gt;easy&lt;span class=&#34;token operator&#34;&gt;-&lt;/span&gt;rsa&lt;span class=&#34;token operator&#34;&gt;/&lt;/span&gt;pki&lt;span class=&#34;token operator&#34;&gt;/&lt;/span&gt;dh&lt;span class=&#34;token punctuation&#34;&gt;.&lt;/span&gt;pem&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td data-num=&#34;7&#34;&gt;&lt;/td&gt;&lt;td&gt;&lt;pre&gt;ca &lt;span class=&#34;token operator&#34;&gt;/&lt;/span&gt;etc&lt;span class=&#34;token operator&#34;&gt;/&lt;/span&gt;openvpn&lt;span class=&#34;token operator&#34;&gt;/&lt;/span&gt;easy&lt;span class=&#34;token operator&#34;&gt;-&lt;/span&gt;rsa&lt;span class=&#34;token operator&#34;&gt;/&lt;/span&gt;pki&lt;span class=&#34;token operator&#34;&gt;/&lt;/span&gt;ca&lt;span class=&#34;token punctuation&#34;&gt;.&lt;/span&gt;crt&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td data-num=&#34;8&#34;&gt;&lt;/td&gt;&lt;td&gt;&lt;pre&gt;cert &lt;span class=&#34;token operator&#34;&gt;/&lt;/span&gt;etc&lt;span class=&#34;token operator&#34;&gt;/&lt;/span&gt;openvpn&lt;span class=&#34;token operator&#34;&gt;/&lt;/span&gt;easy&lt;span class=&#34;token operator&#34;&gt;-&lt;/span&gt;rsa&lt;span class=&#34;token operator&#34;&gt;/&lt;/span&gt;pki&lt;span class=&#34;token operator&#34;&gt;/&lt;/span&gt;issued&lt;span class=&#34;token operator&#34;&gt;/&lt;/span&gt;server&lt;span class=&#34;token punctuation&#34;&gt;.&lt;/span&gt;crt&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td data-num=&#34;9&#34;&gt;&lt;/td&gt;&lt;td&gt;&lt;pre&gt;key &lt;span class=&#34;token operator&#34;&gt;/&lt;/span&gt;etc&lt;span class=&#34;token operator&#34;&gt;/&lt;/span&gt;openvpn&lt;span class=&#34;token operator&#34;&gt;/&lt;/span&gt;easy&lt;span class=&#34;token operator&#34;&gt;-&lt;/span&gt;rsa&lt;span class=&#34;token operator&#34;&gt;/&lt;/span&gt;pki&lt;span class=&#34;token operator&#34;&gt;/&lt;/span&gt;&lt;span class=&#34;token keyword&#34;&gt;private&lt;/span&gt;&lt;span class=&#34;token operator&#34;&gt;/&lt;/span&gt;server&lt;span class=&#34;token punctuation&#34;&gt;.&lt;/span&gt;key&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td data-num=&#34;10&#34;&gt;&lt;/td&gt;&lt;td&gt;&lt;pre&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td data-num=&#34;11&#34;&gt;&lt;/td&gt;&lt;td&gt;&lt;pre&gt;comp&lt;span class=&#34;token operator&#34;&gt;-&lt;/span&gt;lzo&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td data-num=&#34;12&#34;&gt;&lt;/td&gt;&lt;td&gt;&lt;pre&gt;keepalive &lt;span class=&#34;token number&#34;&gt;10&lt;/span&gt; &lt;span class=&#34;token number&#34;&gt;60&lt;/span&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td data-num=&#34;13&#34;&gt;&lt;/td&gt;&lt;td&gt;&lt;pre&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td data-num=&#34;14&#34;&gt;&lt;/td&gt;&lt;td&gt;&lt;pre&gt;verb &lt;span class=&#34;token number&#34;&gt;3&lt;/span&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;&lt;/figure&gt;&lt;p&gt;&lt;code&gt;sudo systemctl enable --now openvpn-server@servidor&lt;/code&gt;&lt;/p&gt;
+&lt;h2 id=&#34;cliente-2&#34;&gt;&lt;a class=&#34;markdownIt-Anchor&#34; href=&#34;#cliente-2&#34;&gt;#&lt;/a&gt; Cliente&lt;/h2&gt;
+&lt;figure class=&#34;highlight ruby&#34;&gt;&lt;figcaption data-lang=&#34;ruby&#34;&gt;&lt;/figcaption&gt;&lt;table&gt;&lt;tr&gt;&lt;td data-num=&#34;1&#34;&gt;&lt;/td&gt;&lt;td&gt;&lt;pre&gt;sudo apt update&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td data-num=&#34;2&#34;&gt;&lt;/td&gt;&lt;td&gt;&lt;pre&gt;sudo apt install openvpn&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td data-num=&#34;3&#34;&gt;&lt;/td&gt;&lt;td&gt;&lt;pre&gt;sudo mv &lt;span class=&#34;token punctuation&#34;&gt;&amp;#123;&lt;/span&gt;ca&lt;span class=&#34;token punctuation&#34;&gt;.&lt;/span&gt;crt&lt;span class=&#34;token punctuation&#34;&gt;,&lt;/span&gt;clientevpn&lt;span class=&#34;token punctuation&#34;&gt;.&lt;/span&gt;crt&lt;span class=&#34;token punctuation&#34;&gt;,&lt;/span&gt;clientevpn&lt;span class=&#34;token punctuation&#34;&gt;.&lt;/span&gt;key&lt;span class=&#34;token punctuation&#34;&gt;&amp;#125;&lt;/span&gt; &lt;span class=&#34;token operator&#34;&gt;/&lt;/span&gt;etc&lt;span class=&#34;token operator&#34;&gt;/&lt;/span&gt;openvpn&lt;span class=&#34;token operator&#34;&gt;/&lt;/span&gt;client&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td data-num=&#34;4&#34;&gt;&lt;/td&gt;&lt;td&gt;&lt;pre&gt;sudo chown root&lt;span class=&#34;token operator&#34;&gt;:&lt;/span&gt; &lt;span class=&#34;token operator&#34;&gt;/&lt;/span&gt;etc&lt;span class=&#34;token operator&#34;&gt;/&lt;/span&gt;openvpn&lt;span class=&#34;token operator&#34;&gt;/&lt;/span&gt;client&lt;span class=&#34;token operator&#34;&gt;/&lt;/span&gt;&lt;span class=&#34;token operator&#34;&gt;*&lt;/span&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;&lt;/figure&gt;&lt;p&gt;Ahora vamos a crear el fichero /etc/openvpn/client/cliente.conf&lt;/p&gt;
+&lt;figure class=&#34;highlight ruby&#34;&gt;&lt;figcaption data-lang=&#34;ruby&#34;&gt;&lt;/figcaption&gt;&lt;table&gt;&lt;tr&gt;&lt;td data-num=&#34;1&#34;&gt;&lt;/td&gt;&lt;td&gt;&lt;pre&gt;dev tun&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td data-num=&#34;2&#34;&gt;&lt;/td&gt;&lt;td&gt;&lt;pre&gt;remote &lt;span class=&#34;token number&#34;&gt;10.0&lt;/span&gt;&lt;span class=&#34;token number&#34;&gt;.0&lt;/span&gt;&lt;span class=&#34;token number&#34;&gt;.1&lt;/span&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td data-num=&#34;3&#34;&gt;&lt;/td&gt;&lt;td&gt;&lt;pre&gt;ifconfig &lt;span class=&#34;token number&#34;&gt;10.99&lt;/span&gt;&lt;span class=&#34;token number&#34;&gt;.99&lt;/span&gt;&lt;span class=&#34;token number&#34;&gt;.2&lt;/span&gt; &lt;span class=&#34;token number&#34;&gt;10.99&lt;/span&gt;&lt;span class=&#34;token number&#34;&gt;.99&lt;/span&gt;&lt;span class=&#34;token number&#34;&gt;.1&lt;/span&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td data-num=&#34;4&#34;&gt;&lt;/td&gt;&lt;td&gt;&lt;pre&gt;route &lt;span class=&#34;token number&#34;&gt;192.168&lt;/span&gt;&lt;span class=&#34;token number&#34;&gt;.200&lt;/span&gt;&lt;span class=&#34;token number&#34;&gt;.0&lt;/span&gt; &lt;span class=&#34;token number&#34;&gt;255.255&lt;/span&gt;&lt;span class=&#34;token number&#34;&gt;.255&lt;/span&gt;&lt;span class=&#34;token number&#34;&gt;.0&lt;/span&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td data-num=&#34;5&#34;&gt;&lt;/td&gt;&lt;td&gt;&lt;pre&gt;tls&lt;span class=&#34;token operator&#34;&gt;-&lt;/span&gt;client&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td data-num=&#34;6&#34;&gt;&lt;/td&gt;&lt;td&gt;&lt;pre&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td data-num=&#34;7&#34;&gt;&lt;/td&gt;&lt;td&gt;&lt;pre&gt;ca &lt;span class=&#34;token operator&#34;&gt;/&lt;/span&gt;etc&lt;span class=&#34;token operator&#34;&gt;/&lt;/span&gt;openvpn&lt;span class=&#34;token operator&#34;&gt;/&lt;/span&gt;client&lt;span class=&#34;token operator&#34;&gt;/&lt;/span&gt;ca&lt;span class=&#34;token punctuation&#34;&gt;.&lt;/span&gt;crt&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td data-num=&#34;8&#34;&gt;&lt;/td&gt;&lt;td&gt;&lt;pre&gt;cert &lt;span class=&#34;token operator&#34;&gt;/&lt;/span&gt;etc&lt;span class=&#34;token operator&#34;&gt;/&lt;/span&gt;openvpn&lt;span class=&#34;token operator&#34;&gt;/&lt;/span&gt;client&lt;span class=&#34;token operator&#34;&gt;/&lt;/span&gt;clientevpn&lt;span class=&#34;token punctuation&#34;&gt;.&lt;/span&gt;crt&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td data-num=&#34;9&#34;&gt;&lt;/td&gt;&lt;td&gt;&lt;pre&gt;key &lt;span class=&#34;token operator&#34;&gt;/&lt;/span&gt;etc&lt;span class=&#34;token operator&#34;&gt;/&lt;/span&gt;openvpn&lt;span class=&#34;token operator&#34;&gt;/&lt;/span&gt;client&lt;span class=&#34;token operator&#34;&gt;/&lt;/span&gt;clientevpn&lt;span class=&#34;token punctuation&#34;&gt;.&lt;/span&gt;key&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td data-num=&#34;10&#34;&gt;&lt;/td&gt;&lt;td&gt;&lt;pre&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td data-num=&#34;11&#34;&gt;&lt;/td&gt;&lt;td&gt;&lt;pre&gt;comp&lt;span class=&#34;token operator&#34;&gt;-&lt;/span&gt;lzo&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td data-num=&#34;12&#34;&gt;&lt;/td&gt;&lt;td&gt;&lt;pre&gt;keepalive &lt;span class=&#34;token number&#34;&gt;10&lt;/span&gt; &lt;span class=&#34;token number&#34;&gt;60&lt;/span&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td data-num=&#34;13&#34;&gt;&lt;/td&gt;&lt;td&gt;&lt;pre&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td data-num=&#34;14&#34;&gt;&lt;/td&gt;&lt;td&gt;&lt;pre&gt;verb &lt;span class=&#34;token number&#34;&gt;3&lt;/span&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;&lt;/figure&gt;&lt;p&gt;sudo systemctl enable --now openvpn-client@cliente&lt;/p&gt;
+&lt;h2 id=&#34;cliente-1&#34;&gt;&lt;a class=&#34;markdownIt-Anchor&#34; href=&#34;#cliente-1&#34;&gt;#&lt;/a&gt; Cliente 1&lt;/h2&gt;
+&lt;p&gt;sudo ip route del default&lt;br&gt;
+sudo ip route add default via 192.168.200.1&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;/images/vpn-cliente2-traceroute.png&#34; alt=&#34;Descripción de la imagen&#34;&gt;&lt;br&gt;
+&lt;img src=&#34;/images/vpn-cliente1.png&#34; alt=&#34;Descripción de la imagen&#34;&gt;&lt;/p&gt;
+&lt;h2 id=&#34;cliente-2&#34;&gt;&lt;a class=&#34;markdownIt-Anchor&#34; href=&#34;#cliente-2&#34;&gt;#&lt;/a&gt; Cliente 2&lt;/h2&gt;
+&lt;p&gt;sudo ip route del default&lt;br&gt;
+sudo ip route add default via 192.168.100.1&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;/images/vpn-cliente2-traceroute.png&#34; alt=&#34;Descripción de la imagen&#34;&gt;&lt;br&gt;
+&lt;img src=&#34;/images/vpn-cliente2.png&#34; alt=&#34;Descripción de la imagen&#34;&gt;&lt;/p&gt;
+ ]]></description>
+        </item>
+    </channel>
+</rss>
