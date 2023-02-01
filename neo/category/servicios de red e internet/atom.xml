@@ -1,0 +1,472 @@
+<?xml version="1.0"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+    <id>http://example.com</id>
+    <title>Hexo • Posts by &#34;servicios de red e internet&#34; category</title>
+    <link href="http://example.com" />
+    <updated>2023-01-10T00:38:26.921Z</updated>
+    <category term="Servicios de Red e Internet" />
+    <category term="Sistemas Operativos" />
+    <category term="Seguridad" />
+    <entry>
+        <id>http://example.com/2023/01/10/dns-vistas/</id>
+        <title>Configurar un entorno DNS con vistas.</title>
+        <link rel="alternate" href="http://example.com/2023/01/10/dns-vistas/"/>
+        <content type="html">&lt;p&gt;&lt;img src=&#34;/images/vistas-dns-1.png&#34; alt=&#34;Descripción de la imagen&#34;&gt;&lt;/p&gt;
+&lt;p&gt;Instalaremos un servidor DNS en charlie, de tal forma que todos los nombres de las máquinas deben tener resolución unas con otras al preguntar a charlie.&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;/images/Untitled-2023-01-10-0143.png&#34; alt=&#34;Descripción de la imagen&#34;&gt;&lt;/p&gt;
+&lt;p&gt;Las vistas sirven para que cada máquina en un entorno pueda ver las correspondientes salidas a nombres que se hallan dentro del entorno, para esto debemos hacer una configuración en el &amp;#x2F;etc&amp;#x2F;bind&amp;#x2F;named.conf.local, que quedaría de la siguiente manera:&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;view interna &amp;#123;
+    match-clients &amp;#123; 192.168.0.0/24; 127.0.0.1; &amp;#125;;
+    allow-recursion &amp;#123; any; &amp;#125;;
+        zone &amp;quot;antonio.gonzalonazareno.org&amp;quot;
+        &amp;#123;
+               type master;
+               file &amp;quot;db.interna.antonio.gonzalonazareno.org&amp;quot;;
+        &amp;#125;;
+        zone &amp;quot;0.168.192.in-addr.arpa&amp;quot;
+        &amp;#123;
+               type master;
+               file &amp;quot;db.0.168.192&amp;quot;;
+        &amp;#125;;
+        zone &amp;quot;16.172.in-addr.arpa&amp;quot;
+        &amp;#123;
+               type master;
+               file &amp;quot;db.16.172&amp;quot;;
+        &amp;#125;;
+        include &amp;quot;/etc/bind/zones.rfc1918&amp;quot;;
+        include &amp;quot;/etc/bind/named.conf.default-zones&amp;quot;;
+&amp;#125;;
+
+view externa &amp;#123;
+    match-clients &amp;#123; 172.22.0.0/16; 192.168.202.2; 172.29.0.0/16;&amp;#125;;
+    allow-recursion &amp;#123; any; &amp;#125;;
+        zone &amp;quot;antonio.gonzalonazareno.org&amp;quot;
+        &amp;#123;
+               type master;
+               file &amp;quot;db.externa.antonio.gonzalonazareno.org&amp;quot;;
+        &amp;#125;;
+        include &amp;quot;/etc/bind/zones.rfc1918&amp;quot;;
+        include &amp;quot;/etc/bind/named.conf.default-zones&amp;quot;;
+&amp;#125;;
+
+view dmz &amp;#123;
+    match-clients &amp;#123;172.22.0.0/16; 172.16.0.0/16; 172.29.0.0/16;&amp;#125;;
+    allow-recursion &amp;#123; any; &amp;#125;;
+        zone &amp;quot;antonio.gonzalonazareno.org&amp;quot;
+        &amp;#123;
+               type master;
+               file &amp;quot;db.dmz.antonio.gonzalonazareno.org&amp;quot;;
+        &amp;#125;;
+        zone &amp;quot;16.172.in-addr.arpa&amp;quot;
+        &amp;#123;
+               type master;
+               file &amp;quot;db.16.172&amp;quot;;
+        &amp;#125;;
+        zone &amp;quot;0.168.192.in-addr.arpa&amp;quot;
+        &amp;#123;
+               type master;
+               file &amp;quot;db.0.168.192&amp;quot;;
+        &amp;#125;;
+        include &amp;quot;/etc/bind/zones.rfc1918&amp;quot;;
+        include &amp;quot;/etc/bind/named.conf.default-zones&amp;quot;;
+&amp;#125;;
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;Por cada rango de ips, tenemos una vista, ¿por qué tenemos 5 vistas? pues la respuesta sería la siguiente:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;La vista interna que será la vista que tendrán alfa, charlie y delta que contendrá 192.168.0.0&lt;/li&gt;
+&lt;li&gt;La vista externa que será la que se muestre al exterior con 172.22.0.0&lt;/li&gt;
+&lt;li&gt;La vista dmz que tendrá a bravo con 172.16.0.0&lt;/li&gt;
+&lt;li&gt;Tanto la vista dmz como la interna tendrán respuesta sobre resoluciones inversas, pero en la externa no la tenemos, esto es debido a que no debemos proporcionar más información de la esencial a las preguntas desde la vista externa, ya que proviene del exterior y por tanto es menos seguro.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;Una vez creada las zonas debemos crear los ficheros en &amp;#x2F;var&amp;#x2F;cache&amp;#x2F;bind&amp;#x2F;&lt;/p&gt;
+&lt;h2 id=&#34;Zona-externa&#34;&gt;&lt;a href=&#34;#Zona-externa&#34; class=&#34;headerlink&#34; title=&#34;Zona externa:&#34;&gt;&lt;/a&gt;Zona externa:&lt;/h2&gt;&lt;pre&gt;&lt;code&gt;$TTL    86400
+@       IN      SOA     alfa.antonio.gonzalonazareno.org. root.antonio.gonzalonazareno.org. (
+                              1         ; Serial
+                         604800         ; Refresh
+                          86400         ; Retry
+                        2419200         ; Expire
+                          86400 )       ; Negative Cache TTL
+;
+@       IN      NS              alfa.antonio.gonzalonazareno.org.
+
+$ORIGIN antonio.gonzalonazareno.org.
+
+alfa                    IN      A               172.22.200.193
+dns                     IN      CNAME           alfa
+www                     IN      CNAME           alfa
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;Como podemos ver, hay varios cname, esto significa que en las preguntas dns que se realizarán desde el exterior a alfa, la respuesta sería tanto que alfa es el dns como el www, ya que no hay que proporcionar la información del interior.&lt;/p&gt;
+&lt;h2 id=&#34;Zona-interna&#34;&gt;&lt;a href=&#34;#Zona-interna&#34; class=&#34;headerlink&#34; title=&#34;Zona interna:&#34;&gt;&lt;/a&gt;Zona interna:&lt;/h2&gt;&lt;pre&gt;&lt;code&gt;$TTL    86400
+@       IN      SOA     charlie.antonio.gonzalonazareno.org. root.antonio.gonzalonazareno.org. (
+                              1         ; Serial
+                         604800         ; Refresh
+                          86400         ; Retry
+                        2419200         ; Expire
+                          86400 )       ; Negative Cache TTL
+;
+@       IN      NS              charlie.antonio.gonzalonazareno.org.
+
+$ORIGIN antonio.gonzalonazareno.org.
+
+alfa                    IN      A               192.168.0.1
+bravo                   IN      A               172.16.0.200
+charlie                 IN      A               192.168.0.2
+delta                   IN      A               192.168.0.3
+bd                      IN      CNAME           delta
+dns                     IN      CNAME           charlie
+www                     IN      CNAME           bravo
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;Ahora en la vista interna podemos ver la información de las ip de las máquinas ya que es un entorno de producción seguro.&lt;/p&gt;
+&lt;h2 id=&#34;Zona-interna-inversa&#34;&gt;&lt;a href=&#34;#Zona-interna-inversa&#34; class=&#34;headerlink&#34; title=&#34;Zona interna inversa:&#34;&gt;&lt;/a&gt;Zona interna inversa:&lt;/h2&gt;&lt;pre&gt;&lt;code&gt;$TTL    86400
+@       IN      SOA     charlie.antonio.gonzalonazareno.org. root.antonio.gonzalonazareno.org. (
+                              1         ; Serial
+                         604800         ; Refresh
+                          86400         ; Retry
+                        2419200         ; Expire
+                          86400 )       ; Negative Cache TTL
+;
+@       IN      NS              charlie.antonio.gonzalonazareno.org.
+
+$ORIGIN 0.168.192.in-addr.arpa.
+
+1                       IN      PTR             alfa.antonio.gonzalonazareno.org.
+2                       IN      PTR             charlie.antonio.gonzalonazareno.org.
+3                       IN      PTR             delta.antonio.gonzalonazareno.org.
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;Es importante el ‘.’ después del nombre del fdqn de la máquina ya que si no lo hacemos lo concatenará en la resolución con la ip inversa.&lt;/p&gt;
+&lt;h2 id=&#34;Zona-DMZ&#34;&gt;&lt;a href=&#34;#Zona-DMZ&#34; class=&#34;headerlink&#34; title=&#34;Zona DMZ:&#34;&gt;&lt;/a&gt;Zona DMZ:&lt;/h2&gt;&lt;pre&gt;&lt;code&gt;$TTL    86400
+@       IN      SOA     charlie.antonio.gonzalonazareno.org. root.antonio.gonzalonazareno.org. (
+                              1         ; Serial
+                         604800         ; Refresh
+                          86400         ; Retry
+                        2419200         ; Expire
+                          86400 )       ; Negative Cache TTL
+;
+@       IN      NS              charlie.antonio.gonzalonazareno.org.
+
+$ORIGIN antonio.gonzalonazareno.org.
+
+alfa                    IN      A               172.16.0.1
+bravo                   IN      A               172.16.0.200
+charlie                 IN      A               192.168.0.2
+delta                   IN      A               192.168.0.3
+bd                      IN      CNAME           delta
+dns                     IN      CNAME           charlie
+www                     IN      CNAME           bravo
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;La diferencia que podemos apreciar de esta vista es que alfa posee el gateway 172.16.0.1, que es la que verá bravo.&lt;/p&gt;
+&lt;h2 id=&#34;Zona-DMZ-inversa&#34;&gt;&lt;a href=&#34;#Zona-DMZ-inversa&#34; class=&#34;headerlink&#34; title=&#34;Zona DMZ inversa:&#34;&gt;&lt;/a&gt;Zona DMZ inversa:&lt;/h2&gt;&lt;pre&gt;&lt;code&gt;$TTL    86400
+@       IN      SOA     charlie.antonio.gonzalonazareno.org. root.antonio.gonzalonazareno.org. (
+                              1         ; Serial
+                         604800         ; Refresh
+                          86400         ; Retry
+                        2419200         ; Expire
+                          86400 )       ; Negative Cache TTL
+;
+@       IN      NS              charlie.antonio.gonzalonazareno.org.
+
+$ORIGIN 16.172.in-addr.arpa.
+
+0.200                   IN      PTR             bravo.antonio.gonzalonazareno.org
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;Una vez hecho esto debemos hacer systemctl restart bind9 y comprobamos que no haya errores de sintaxis, después podemos porbar a realizar consultas con dig.&lt;/p&gt;
+&lt;p&gt;Ahora una vez realizadas las configuraciones, podemos jugar un poco con esto! y es que por ejemplo si tenemos una base de datos en delta y el cliente de esta base de datos está en bravo, podemos entrar poniendo el cname que especificamos en el dns.&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;/images/prueba-dns-mysql.png&#34; alt=&#34;Descripción de la imagen&#34;&gt;&lt;/p&gt;
+&lt;p&gt;Y si en el caso que en el &amp;#x2F;etc&amp;#x2F;resolv.conf ponemos un search con el nombre del dominio &lt;code&gt;search antonio.gonzalonazareno.org&lt;/code&gt; pues no haría falta especificar siquiera el dominio, como en el siguiente ejemplo:&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;/images/prueba-dns-mysql2.png&#34; alt=&#34;Descripción de la imagen&#34;&gt;&lt;/p&gt;
+&lt;p&gt;Por último dejamos la web de alfa que realmente estará alojada en bravo:&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;/images/web-alfa.png&#34; alt=&#34;Descripción de la imagen&#34;&gt;&lt;/p&gt;
+&lt;h2 id=&#34;Tips&#34;&gt;&lt;a href=&#34;#Tips&#34; class=&#34;headerlink&#34; title=&#34;Tips&#34;&gt;&lt;/a&gt;Tips&lt;/h2&gt;&lt;p&gt;Si queremos servir una web que está en un servidor que no pasa por alfa pero no es alfa, debemos poner una regla de iptables que nos permita dirigir el tráfico por el puerto que especifiquemos a bravo, para poder así acceder desde fuera.&lt;/p&gt;
+&lt;p&gt;Si necesitamos acceder a este entorno desde un servidor dns que lo controle, debemos editar el archivo &amp;#x2F;etc&amp;#x2F;bind&amp;#x2F;named.conf.options&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt; forwarders &amp;#123;
+      192.168.202.2;
+ &amp;#125;;
+&lt;/code&gt;&lt;/pre&gt;
+</content>
+        <category term="Servicios de Red e Internet" />
+        <updated>2023-01-10T00:38:26.921Z</updated>
+    </entry>
+    <entry>
+        <id>http://example.com/2022/12/13/dns/</id>
+        <title>Configurar un servidor DNS.</title>
+        <link rel="alternate" href="http://example.com/2022/12/13/dns/"/>
+        <content type="html">&lt;p&gt;&lt;img src=&#34;/images/obelix-4.jpg&#34; alt=&#34;Descripción de la imagen&#34;&gt;&lt;/p&gt;
+&lt;h2 id=&#34;Servidor-maestro&#34;&gt;&lt;a href=&#34;#Servidor-maestro&#34; class=&#34;headerlink&#34; title=&#34;Servidor maestro&#34;&gt;&lt;/a&gt;Servidor maestro&lt;/h2&gt;&lt;p&gt;Primero comenzaremos actualizando el sistema e instalando el servidor dns bind9, la máquina deberá tener un nombre full qualificated como en mi caso que sería &lt;strong&gt;dns1.antonio.org&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;apt update &amp;amp;&amp;amp; apt install bind9 -y&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;Vamos a forzar la salida de las peutciones por ipv4, ya que al no estar configurado de esta forma pueden perderse paquetes al tratar de viajar a través de ipv6, esto lo haremos en &amp;#x2F;etc&amp;#x2F;default&amp;#x2F;named, especificando esta sentencia en  &lt;code&gt;OPTIONS=&amp;quot;-4 -f -u bind&amp;quot;&lt;/code&gt;.&lt;/p&gt;
+&lt;p&gt;Primero debemos permitir el tráfico desde las diferentes ip en el fichero &amp;#x2F;etc&amp;#x2F;bind&amp;#x2F;named.conf.options.&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;allow-query &amp;#123;172.29.0.0/16; 172.22.0.0/16;&amp;#125;;
+allow-transfer &amp;#123; none ;&amp;#125;;
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;Allow-query se encargará de permitir las consultas a través de los distintos rangos de ip, yo al estar conectado a una vpn debo poner también ese rango para así poder realizar las consultas desde casa.&lt;/p&gt;
+&lt;p&gt;Allow-transfer none hará que no se realicen transpasos completos en la información de la zona, esto nos permitirá que no podamos exponer información sensible dentro del servidor dns al realizar las consultas con dig.&lt;/p&gt;
+&lt;p&gt;Tras esto, comenzaremos editando el fichero de configuración de zonas, el cual se encargará de administrar las plantillas a las que se les va a realizar una consulta dns con dig.&lt;/p&gt;
+&lt;p&gt;&amp;#x2F;etc&amp;#x2F;bind&amp;#x2F;named.conf.local&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&#34;shell&#34;&gt;include &amp;quot;/etc/bind/zones.rfc1918&amp;quot;;
+zone &amp;quot;antonio.org&amp;quot; &amp;#123;
+    type master;
+    file &amp;quot;db.antonio.org&amp;quot;;
+    allow-transfer &amp;#123; 172.22.7.171; &amp;#125;;
+    notify yes;
+&amp;#125;;
+
+zone &amp;quot;22.172.in-addr.arpa&amp;quot; &amp;#123;
+    type master;
+    file &amp;quot;db.172.22.0.0&amp;quot;;
+    allow-transfer &amp;#123; 172.22.7.171; &amp;#125;;
+    notify yes;
+&amp;#125;;
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;Nuestra zona será antonio.org, el cual tendrá el fichero db.antonio.org, hasta ahí será necesario para ralizar solo un dns, para realizar el dns respaldado por un esclavo necesitaremos conceder el traspaso a la ip 172.22.7.171 que será la ip de la máquina esclava, más abajo nos econtraremos con el fichero de zona de resolución inversa, el cual tendrá el nombre del rango de ip que abarcará, y la misma transferencia de zona y el notify que será lo que avise al esclavo que ha habido un cambio en el maestro.&lt;/p&gt;
+&lt;p&gt;Si nos vamos al fichero &amp;#x2F;var&amp;#x2F;cache&amp;#x2F;bind&amp;#x2F;db.antonio.org podemos ver los siguientes componentes:&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&#34;shell&#34;&gt;$TTL    86400
+@       IN      SOA     dns1.antonio.org. root.antonio.org. (
+                              6         ; Serial
+                         604800         ; Refresh
+                          86400         ; Retry
+                        2419200         ; Expire
+                          86400 )       ; Negative Cache TTL
+;
+
+@       IN      NS              dns1.antonio.org.
+@       IN      NS              dns2.antonio.org.
+@       IN      MX      10      correo.antonio.org.
+
+
+$ORIGIN antonio.org.
+
+dns1                    IN      A       172.22.7.155
+dns2                    IN      A       172.22.7.171
+correo                  IN      A       172.22.200.101
+asterix                 IN      A       172.22.200.102
+obelix                  IN      A       172.22.200.103
+prueba                  IN      A       172.22.200.120
+www                     IN      CNAME   asterix
+;informatica             IN      CNAME   asterix
+ftp                     IN      CNAME   obelix
+entrebytes              IN      A       172.22.200.166
+
+$ORIGIN informatica.antonio.org.
+@       IN      NS    dns
+dns     IN      A     172.22.7.177
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;Pues bien, deberemos cumplimentar de la siguiente forma el fichero, el cual tiene las siguientes definiciones:&lt;br&gt;La primera parte es el SOA, que es fdqn de la máquina maestra, acompañado del correo del administrador, el cual será con puntos.&lt;/p&gt;
+&lt;p&gt;En la segunda parte podemos ver los nameservers, el cual tendrá el @, esto mostrará las máquinas a disposición del fdqn que hemos elegido, en nuestro caso tendremos el de la máquina maestra, la del esclavo y la del correo.&lt;/p&gt;
+&lt;p&gt;Origin es la variable que va a tener antonio.org. para no tener que repetir continuamente el nombre del dominio en los registros.&lt;/p&gt;
+&lt;p&gt;Los registros de tipo A tendrán una ip asociada, estos se encargan de darle nombre a la ip de dentro del dominio, como dns1 que tiene una 172.22.7.155 o la del esclavo, que tendrá la 172.22.7.171&lt;/p&gt;
+&lt;p&gt;Los registros de tipo CNAME son nombres relacionados a otros nombres, como por ejemplo ftp, que va relacionado al nombre obelix y que tendrá la ip 172.22.200.103. entonces al realizar la consulta en el apartado ANSWER nos daría el nombre completo al que está asociado.&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;/images/obelix.png&#34; alt=&#34;Descripción de la imagen&#34;&gt;&lt;/p&gt;
+&lt;p&gt;Ahora vamos con el fichero de zona de resolución inversa, el cual crearemos en &amp;#x2F;var&amp;#x2F;cache&amp;#x2F;bind&amp;#x2F;db.172.22.0.0&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&#34;shell&#34;&gt;$TTL    86400
+@       IN      SOA     dns1.antonio.org. root.antonio.org. (
+                              1         ; Serial
+                         604800         ; Refresh
+                          86400         ; Retry
+                        2419200         ; Expire
+                          86400 )       ; Negative Cache TTL
+;
+@      IN      NS              dns1.antonio.org.
+@      IN      NS              dns2.antonio.org.
+
+$ORIGIN 22.172.in-addr.arpa.
+
+155.7                  IN      PTR             dns1.antonio.org.
+171.7                  IN      PTR             dns2.antonio.org.
+101.200                IN      PTR             correo.antonio.org.
+102.200                IN      PTR             asterix.antonio.org.
+200.103                IN      PTR             obelix.antonio.org.
+200.166                IN      PTR             entrebytes.antonio.org.
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;El fichero es muy similar al de la resolución directa, pero en este caso especificaremos la IP de la manera opuesta, con PTR conseguiremos obtener el nombre gracias a una petición inversa a la ip que hemos configurado, también pondremos la del servidor esclavo.&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;/images/obelix-2.png&#34; alt=&#34;Descripción de la imagen&#34;&gt;&lt;/p&gt;
+&lt;p&gt;Por último, debemos editar el fichero &amp;#x2F;etc&amp;#x2F;bind&amp;#x2F;zones.rfc1918 que se encarga de proporcionar la plantilla empty para las resoluciones no configuradas, de manera que debamos comentar el rango de ips de &lt;code&gt;//zone &amp;quot;22.172.in-addr.arpa&amp;quot;  &amp;#123; type master; file &amp;quot;/etc/bind/db.empty&amp;quot;; &amp;#125;;&lt;/code&gt; ya que nosotros hemos configurado anteriormente.&lt;/p&gt;
+&lt;p&gt;ahora solo nos queda realizar un &lt;code&gt;systemctl restart bind9&lt;/code&gt; y &lt;code&gt;systemctl status bind9&lt;/code&gt; para comprobar de que el servicio está activo y sin errores.&lt;/p&gt;
+&lt;h2 id=&#34;Servidor-esclavo&#34;&gt;&lt;a href=&#34;#Servidor-esclavo&#34; class=&#34;headerlink&#34; title=&#34;Servidor esclavo&#34;&gt;&lt;/a&gt;Servidor esclavo&lt;/h2&gt;&lt;p&gt;Primero comenzaremos actualizando el sistema e instalando el servidor dns bind9, la máquina deberá tener un nombre full qualificated como en mi caso que sería &lt;strong&gt;dns2.antonio.org&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;apt update &amp;amp;&amp;amp; apt install bind9 -y&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;Vamos a forzar la salida de las peutciones por ipv4, ya que al no estar configurado de esta forma pueden perderse paquetes al tratar de viajar a través de ipv6, esto lo haremos en &amp;#x2F;etc&amp;#x2F;default&amp;#x2F;named, especificando esta sentencia en  &lt;code&gt;OPTIONS=&amp;quot;-4 -f -u bind&amp;quot;&lt;/code&gt;.&lt;/p&gt;
+&lt;p&gt;&amp;#x2F;etc&amp;#x2F;bind&amp;#x2F;named.conf.local&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&#34;shell&#34;&gt;include &amp;quot;/etc/bind/zones.rfc1918&amp;quot;;
+zone &amp;quot;antonio.org&amp;quot; &amp;#123;
+    type slave;
+    file &amp;quot;db.antonio.org&amp;quot;;
+    masters &amp;#123; 172.22.7.155; &amp;#125;;
+&amp;#125;;
+zone &amp;quot;22.172.in-addr.arpa&amp;quot; &amp;#123;
+    type slave;
+    file &amp;quot;db.172.22.0.0&amp;quot;;
+    masters &amp;#123; 172.22.7.155; &amp;#125;;
+&amp;#125;;
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;Hacemos un &lt;code&gt;systemctl restart bind9&lt;/code&gt; y &lt;code&gt;systemctl status bind9&lt;/code&gt; para comprobar de que el servicio está activo y sin errores.&lt;/p&gt;
+&lt;p&gt;Tras esto, cuando modifiquemos el servidor maestro subimos el serial de tal forma que sea mayor al de la máquina esclava, y de esta manera realizará la transferencia.&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;/images/obelix-3.png&#34; alt=&#34;Descripción de la imagen&#34;&gt;&lt;/p&gt;
+&lt;h2 id=&#34;Delegacion-de-subdominio&#34;&gt;&lt;a href=&#34;#Delegacion-de-subdominio&#34; class=&#34;headerlink&#34; title=&#34;Delegación de subdominio&#34;&gt;&lt;/a&gt;Delegación de subdominio&lt;/h2&gt;&lt;p&gt;Pra delegar un subdominio primero comenzaremos actualizando el sistema e instalando el servidor dns bind9, la máquina deberá tener un nombre full qualificated como en mi caso que sería &lt;strong&gt;dns.informatica.antonio.org&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;apt update &amp;amp;&amp;amp; apt install bind9 -y&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;Vamos a forzar la salida de las peutciones por ipv4, ya que al no estar configurado de esta forma pueden perderse paquetes al tratar de viajar a través de ipv6, esto lo haremos en &amp;#x2F;etc&amp;#x2F;default&amp;#x2F;named, especificando esta sentencia en  &lt;code&gt;OPTIONS=&amp;quot;-4 -f -u bind&amp;quot;&lt;/code&gt;.&lt;/p&gt;
+&lt;p&gt;Una vez hecho esto, como podemos ver en la máquina maestra, tenemos un apartado en db.antonio.org en el cual especificamos los siguientes parámetros:&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&#34;shell&#34;&gt;$ORIGIN informatica.antonio.org.
+@       IN      NS    dns
+dns     IN      A     172.22.7.177
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;Con esto estaremos delegando el subdominio para que lo gestione dns.informatica.antonio.org, si nos vamos a esta máquina, debemos configurar el dominio de la siguiente forma:&lt;/p&gt;
+&lt;p&gt;&amp;#x2F;etc&amp;#x2F;bind&amp;#x2F;named.conf.local&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;zone &amp;quot;informatica.antonio.org&amp;quot; &amp;#123;
+    type master;
+    file &amp;quot;db.informatica.antonio.org&amp;quot;;
+&amp;#125;;
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;Luego nos vamos a &amp;#x2F;var&amp;#x2F;cache&amp;#x2F;bind&amp;#x2F;db.informatica.antonio.org&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&#34;shell&#34;&gt;$TTL    86400
+@       IN      SOA     dns.informatica.antonio.org. root.informatica.antonio.org. (
+                              1         ; Serial
+                         604800         ; Refresh
+                          86400         ; Retry
+                        2419200         ; Expire
+                          86400 )       ; Negative Cache TTL
+;
+@       IN      NS              dns.informatica.antonio.org.
+@       IN      MX      10      mail.informatica.antonio.org.
+
+$ORIGIN informatica.antonio.org.
+
+dns                     IN      A               172.22.7.177
+mail                    IN      A               172.22.7.177
+web                     IN      A               172.22.7.177
+www                     IN      CNAME           web
+entrebytes              IN      CNAME           web
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h2 id=&#34;Tips&#34;&gt;&lt;a href=&#34;#Tips&#34; class=&#34;headerlink&#34; title=&#34;Tips&#34;&gt;&lt;/a&gt;Tips&lt;/h2&gt;&lt;p&gt;Si realizamos cambios a veces no se verán reflejados ya que el servicio DNS la almacena en caché, para borrarla necesitaremos ejecutar &lt;code&gt;rndc flush&lt;/code&gt; en la máquina maestra.&lt;/p&gt;
+&lt;p&gt;Para poder realizar las consultas sin especificar la ip a través de @, necesitaremos agregar un nameserver XXX.XXX.XXX.XXX en &amp;#x2F;etc&amp;#x2F;resolv.conf&lt;/p&gt;
+&lt;p&gt;En el caso de dns.informatica.antonio.org no es necesario descomentar el include “&amp;#x2F;etc&amp;#x2F;bind&amp;#x2F;zones.rfc1918”; ya que se ocupará de gestionarlo la máquina maestra.&lt;/p&gt;
+&lt;p&gt;Para detectar con información más detallada los errores de plantillas db, necesitaremos ejecutar &lt;code&gt;named-checkzone antonio.org /var/cache/bind/db.antonio.org&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;Si queremos detectar los errores del fichero de zonas, necesitaremos ejecutar &lt;code&gt;named-checkconf&lt;/code&gt;&lt;/p&gt;
+</content>
+        <category term="Servicios de Red e Internet" />
+        <updated>2022-12-13T21:49:01.673Z</updated>
+    </entry>
+    <entry>
+        <id>http://example.com/2022/10/13/Ansible+Vagrant/</id>
+        <title>Ansible + Vagrant, configurar y enrutar servidor web.</title>
+        <link rel="alternate" href="http://example.com/2022/10/13/Ansible+Vagrant/"/>
+        <content type="html">&lt;p&gt;&lt;img src=&#34;/images/ansibleandvagrant.jpg&#34; alt=&#34;Descripción de la imagen&#34;&gt;&lt;/p&gt;
+&lt;p&gt;Comenzaremos este post viendo como adjuntamos una box &lt;a href=&#34;https://app.vagrantup.com/boxes/search&#34;&gt;https://app.vagrantup.com/boxes/search&lt;/a&gt;&lt;br&gt;buscamos por ejemplo la de debian&amp;#x2F;ullseye, vamos a nuestra terminal y escribimos lo siguiente:&lt;br&gt;&lt;code&gt;vagrant box add debian/bullseye64&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;En ese momento se guardará en &lt;code&gt;~/.vagrant.d/boxes&lt;/code&gt;&lt;br&gt;Bueno, dicho esto procedemos a crear la carpeta donde vamos a trabajar y hacemos un &lt;code&gt;vagrant init&lt;/code&gt;, esto hará que se cree un archivo llamado vagrantfile, el cual debe quedar de la siguiente manera:&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;Vagrant.configure(&amp;quot;2&amp;quot;) do |config|
+    config.vm.define :nodo1 do |nodo1|
+      nodo1.vm.box = &amp;quot;debian/bullseye64&amp;quot;
+      nodo1.vm.hostname= &amp;quot;nodo1&amp;quot;
+      nodo1.vm.synced_folder &amp;quot;.&amp;quot;, &amp;quot;/vagrant&amp;quot;, disabled: true
+      nodo1.vm.network :public_network,
+        :dev =&amp;gt; &amp;quot;br0&amp;quot;,
+        :mode =&amp;gt; &amp;quot;bridge&amp;quot;,
+        :type =&amp;gt; &amp;quot;bridge&amp;quot;,
+        use_dhcp_assigned_default_route: true
+      nodo1.vm.network :private_network,
+        :libvirt__network_name =&amp;gt; &amp;quot;red1&amp;quot;,
+        :libvirt__dhcp_enabled =&amp;gt; false,
+        :ip =&amp;gt; &amp;quot;10.0.0.10&amp;quot;,
+        :libvirt__forward_mode =&amp;gt; &amp;quot;veryisolated&amp;quot;
+    end
+    config.vm.define :nodo2 do |nodo2|
+      nodo2.vm.box = &amp;quot;debian/bullseye64&amp;quot;
+      nodo2.vm.hostname = &amp;quot;nodo2&amp;quot;
+      nodo2.vm.synced_folder &amp;quot;.&amp;quot;, &amp;quot;/vagrant&amp;quot;, disabled: true
+      nodo2.vm.network :private_network,
+        :libvirt__network_name =&amp;gt; &amp;quot;red1&amp;quot;,
+        :libvirt__dhcp_enabled =&amp;gt; false,
+        :ip =&amp;gt; &amp;quot;10.0.0.11&amp;quot;,
+        :libvirt__forward_mode =&amp;gt; &amp;quot;veryisolated&amp;quot;,
+        use_dhcp_assigned_default_route: true
+    end
+end
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;Vamos a explicar paso por paso qué vemos en el código:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;El vagrantfile debe estar perfectamente alineado, los end con sus respectivos config.&lt;/li&gt;
+&lt;li&gt;Al ser dos máquinas las vamos a llamar nodo1 y nodo2, que una será el router y la segunda el servidor que aloje apache&lt;/li&gt;
+&lt;li&gt;Si nos fijamos con atención podemos ver que &lt;strong&gt;nodo1&lt;/strong&gt; tiene dos redes, una será pública, la cual tiene un bridge por donde saldrá a internet, y una red privada muy aislada, la cual no contendrá nada más que una ip estática, pondremos que la ruta por defecto va a ser el bridge que nos llevará a internet.&lt;/li&gt;
+&lt;li&gt;En &lt;strong&gt;nodo2&lt;/strong&gt; tendremos una red privada, más tarde procederemos a ejecutar unas reglas que nos permitan salir por el exterior a través de la red muy aislada con &lt;strong&gt;nat&lt;/strong&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;Una vez hecho esto procedemos a ver de cerca lo que contiene Ansible, el cual ejecutaremos tras iniciar las máquinas de Vagrant junto con sus redes.&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;/images/Ansible.png&#34; alt=&#34;Descripción de la imagen&#34;&gt;&lt;/p&gt;
+&lt;p&gt;Como podemos ver, hay una serie de carpetas llamadas roles, cada rol va a ejecutar una o varias tareas dependiendo de lo que se trate, por lo tanto así quedaría por ejemplo el activado del bit de forwarding del router:&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;- ansible.posix.sysctl:
+    name: net.ipv4.ip_forward
+    value: &amp;#39;1&amp;#39;
+    sysctl_set: yes
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;Estas tareas tienen un orden, y se realiza dentro de site.yml:&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;- hosts: nodo1
+  become: true
+  roles:
+   - role: copy
+
+- hosts: all
+  become: true
+  roles:
+   - role: commons
+
+- hosts: nodo2
+  become: true
+  roles:
+   - role: copy2
+   - role: apache2
+
+- hosts: nodo1
+  become: true
+  roles:
+   - role: ipv4
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;Con un poco de conocimientos en sistemas podemos ver claramente qué realiza cada rol.&lt;/p&gt;
+&lt;p&gt;Ahora vamos a poner la lupa en &lt;code&gt;roles/commons/handlers/main.yaml&lt;/code&gt;, una parte muy importante de la ejecución de Ansible:&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;- name: reiniciando maquina
+  ansible.builtin.reboot:
+    msg: &amp;quot;reboot by Ansible&amp;quot;
+    pre_reboot_delay: 5
+    post_reboot_delay: 10
+    test_command: &amp;quot;whoami&amp;quot;
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;Este handler se ejecuta en el momento en el que se hace un llamamiento, en nuestro caso es cuando copiamos al router un fichero configurado para etc&amp;#x2F;network&amp;#x2F;interfaces, con sus interfaces, ruta por defecto e iptables:&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;/images/interfaces.png&#34; alt=&#34;Descripción de la imagen&#34;&gt;&lt;/p&gt;
+&lt;p&gt;podemos ver como en &lt;code&gt;roles/copy/tasks/main.yaml&lt;/code&gt; hace el llamamiento al &lt;strong&gt;handler&lt;/strong&gt; en el notify:&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;- name: Copiando al etc/network/interfaces
+  ansible.builtin.copy:
+    src: interfaz_nodo1/interfaces
+    dest: /etc/network/
+    owner: root
+    group: root
+    mode: u-rw,g-wx,o-rwx
+  notify:
+    - reiniciando maquina
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;A continuación podemos copiar nuestra clave pública a través de la tarea &lt;strong&gt;commons&lt;/strong&gt; que será lo que nos permita atravesar por ssh sin utilizar la clave vagrant, es decir, la nuestra.&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;- name: Ensure system is updated
+  apt: update_cache=yes upgrade=yes
+
+- name: Set authorized key took from file
+  authorized_key:
+    user: vagrant
+    state: present
+    key: &amp;quot;&amp;#123;&amp;#123; lookup(&#39;file&#39;, &#39;/home/antonio/.ssh/id_rsa.pub&#39;) &amp;#125;&amp;#125;&amp;quot;
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;Luego pasamos a la instalación de Apache,a través del módulo apt para instalar apache2, ports.conf es la configuración de los puertos por los que escucha, también alberga el fichero index.html y una plantilla jinja2.&lt;/p&gt;
+&lt;p&gt;Por último pero no menos importante está el fichero hosts, el cual será el inventario por el cual el sistema sabrá cuál será nodo1 y cuál nodo2, a través de las correspondientes ips que asignaremos,el usuario más la clave privada que asignará vagrant:&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;all:
+  children:
+    servidores_web:
+      hosts:
+        nodo1:
+          ansible_ssh_host: 192.168.121.212
+          ansible_ssh_user: vagrant
+          ansible_ssh_private_key_file: ../.vagrant/machines/nodo1/libvirt/private_key
+        nodo2:
+          ansible_ssh_host: 192.168.121.111
+          ansible_ssh_user: vagrant
+          ansible_ssh_private_key_file: ../.vagrant/machines/nodo2/libvirt/private_key
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;con esto solo necesitaremos ejecutar el &lt;code&gt;ansible-playbook site.yaml&lt;/code&gt; y tendremos enrutado y configurado nuestro servidor web.&lt;/p&gt;
+</content>
+        <category term="Servicios de Red e Internet" />
+        <updated>2022-10-13T17:45:40.684Z</updated>
+    </entry>
+</feed>
